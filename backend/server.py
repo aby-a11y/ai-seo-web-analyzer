@@ -146,6 +146,11 @@ async def scrape_website(url: str) -> Dict[str, Any]:
         h2_tags = [h2.get_text().strip() for h2 in soup.find_all('h2')]
         h3_tags = [h3.get_text().strip() for h3 in soup.find_all('h3')]
         
+        # Extract images and count missing alt attributes
+        images = soup.find_all('img')
+        total_images = len(images)
+        images_without_alt = len([img for img in images if not img.get('alt') or not img.get('alt').strip()])
+        
         # Extract all text content for word count
         text_content = soup.get_text()
         words = re.findall(r'\w+', text_content)
@@ -178,6 +183,8 @@ async def scrape_website(url: str) -> Dict[str, Any]:
             'h2_tags': h2_tags,
             'h3_tags': h3_tags,
             'word_count': word_count,
+            'total_images': total_images,
+            'images_without_alt': images_without_alt,
             'meta_keywords': keywords,
             'og_title': og_title.get('content') if og_title else None,
             'og_description': og_description.get('content') if og_description else None,
@@ -200,55 +207,90 @@ async def analyze_with_ai(url: str, scraped_data: Dict[str, Any]) -> SEOReport:
     if not api_key:
         raise HTTPException(status_code=500, detail="OPENAI_API_KEY not configured")
     
-    # Create analysis prompt
-    analysis_prompt = f"""You are a senior SEO consultant analyzing a website. Provide a comprehensive SEO audit.
+    # Calculate exact character counts
+    title_length = len(scraped_data.get('title', '')) if scraped_data.get('title') else 0
+    meta_length = len(scraped_data.get('meta_description', '')) if scraped_data.get('meta_description') else 0
+    
+    # Create enhanced analysis prompt with specific metrics
+    analysis_prompt = f"""You are a senior SEO consultant analyzing a website. Provide a comprehensive, data-driven SEO audit with SPECIFIC METRICS and ACTIONABLE recommendations.
 
 Website URL: {url}
 
-Scraped Data:
-- Title: {scraped_data.get('title', 'Missing')}
-- Meta Description: {scraped_data.get('meta_description', 'Missing')}
-- H1 Tags: {', '.join(scraped_data.get('h1_tags', [])) or 'Missing'}
-- H2 Tags: {', '.join(scraped_data.get('h2_tags', [])[:5]) or 'Few/Missing'}
-- Word Count: {scraped_data.get('word_count', 0)}
-- Has Structured Data: {scraped_data.get('has_structured_data', False)}
-- Canonical URL: {scraped_data.get('canonical_url', 'Not set')}
-- OG Tags: {'Present' if scraped_data.get('og_title') else 'Missing'}
+Current Website Metrics:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 TITLE TAG
+- Current: "{scraped_data.get('title', 'Missing')}"
+- Length: {title_length} characters
+- Target: 50-60 characters
 
-Provide a detailed SEO analysis in the following JSON format:
+📝 META DESCRIPTION
+- Current: "{scraped_data.get('meta_description', 'Missing')}"
+- Length: {meta_length} characters
+- Target: 150-160 characters
+
+🏷️ HEADINGS
+- H1 Tags: {', '.join(scraped_data.get('h1_tags', [])) or 'Missing'} (Count: {len(scraped_data.get('h1_tags', []))})
+- H2 Tags: {', '.join(scraped_data.get('h2_tags', [])[:5]) or 'Few/Missing'} (Count: {len(scraped_data.get('h2_tags', []))})
+- Target: 1 H1, 3-6 H2s
+
+📄 CONTENT
+- Word Count: {scraped_data.get('word_count', 0)} words
+- Target: 500-2000 words (depending on page type)
+
+🖼️ IMAGES
+- Total Images: {scraped_data.get('total_images', 0)}
+- Missing Alt Text: {scraped_data.get('images_without_alt', 0)} images
+- Target: 0 missing alt texts
+
+🔧 TECHNICAL
+- Structured Data: {'✓ Present' if scraped_data.get('has_structured_data', False) else '✗ Missing'}
+- Canonical URL: {scraped_data.get('canonical_url', '✗ Not set')}
+- OG Tags: {'✓ Present' if scraped_data.get('og_title') else '✗ Missing'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CRITICAL INSTRUCTIONS:
+You MUST provide DETAILED, SPECIFIC recommendations following this format:
+
+For each recommendation, include:
+1. ❌ Current State: [exact current value with numbers]
+2. ✅ Target State: [specific target with numbers]
+3. 📋 Example: '[ready-to-use example that can be directly implemented]'
+4. 📈 Impact: [measurable expected improvement like "+15-20% CTR" or "+50 monthly visitors"]
+
+Provide analysis in this EXACT JSON format:
 
 {{
   "seo_score": <number 0-100>,
-  "analysis_summary": "<2-3 sentence executive summary>",
+  "analysis_summary": "<2-3 sentence executive summary mentioning 2-3 key metrics that need immediate attention>",
   "seo_issues": [
     {{
       "priority": "High|Medium|Low",
-      "category": "<category name>",
-      "issue": "<specific issue>",
-      "recommendation": "<actionable fix>"
+      "category": "Title Tag|Meta Description|Content|Images|Technical SEO|Performance",
+      "issue": "<specific issue with current metric>",
+      "recommendation": "CURRENT: [exact current state with numbers]\\nTARGET: [specific target with numbers]\\nEXAMPLE: '[ready-to-use optimized text]'\\nIMPACT: [measurable improvement estimate]"
     }}
   ],
   "keyword_strategy": {{
-    "primary_keyword": "<best primary keyword for this site>",
-    "long_tail_keywords": ["<keyword1>", "<keyword2>", ...],
+    "primary_keyword": "<best primary keyword based on page content>",
+    "long_tail_keywords": ["<specific keyword 1>", "<specific keyword 2>", "<specific keyword 3>"],
     "keyword_intent": {{
-      "<keyword>": "informational|commercial|transactional"
+      "<keyword>": "informational|commercial|transactional|navigational"
     }}
   }},
   "competitor_analysis": {{
-    "assumed_competitors": ["<competitor1.com>", "<competitor2.com>"],
-    "content_gaps": ["<gap1>", "<gap2>"],
-    "opportunities": ["<opportunity1>", "<opportunity2>"]
+    "assumed_competitors": ["<competitor1.com>", "<competitor2.com>", "<competitor3.com>"],
+    "content_gaps": ["<specific gap: e.g., 'Missing comparison tables with specs'>", "<gap 2>"],
+    "opportunities": ["<specific opportunity with numbers: e.g., 'Target long-tail keywords with 500+ monthly searches'>", "<opportunity 2>"]
   }},
   "content_recommendations": [
     {{
-      "page_type": "Blog Post|Landing Page|Product Page",
-      "topic": "<specific topic>",
-      "target_keywords": ["<keyword1>", "<keyword2>"],
+      "page_type": "Blog Post|Landing Page|Product Page|Service Page|Homepage",
+      "topic": "<specific topic with target word count: e.g., 'Complete Guide to X (1500 words)'>",
+      "target_keywords": ["<primary keyword>", "<secondary keyword>", "<LSI keyword>"],
       "structure": {{
-        "h1": ["<main heading>"],
-        "h2": ["<subheading1>", "<subheading2>"],
-        "h3": ["<detail1>", "<detail2>"]
+        "h1": ["<exact ready-to-use H1 example>"],
+        "h2": ["<exact H2 example 1>", "<exact H2 example 2>", "<exact H2 example 3>"],
+        "h3": ["<exact H3 example 1>", "<exact H3 example 2>"]
       }}
     }}
   ],
@@ -256,21 +298,48 @@ Provide a detailed SEO analysis in the following JSON format:
     {{
       "week": "Week 1",
       "priority": "High",
+      "action": "<specific action with exact steps: e.g., 'Reduce title from 74 to 58 chars, add primary keyword at start'>",
+      "expected_impact": "<measurable impact: e.g., '+15-20% CTR improvement, estimated +100 clicks/month'>"
+    }},
+    {{
+      "week": "Week 2",
+      "priority": "High|Medium",
       "action": "<specific action>",
-      "expected_impact": "<impact description>"
+      "expected_impact": "<measurable impact>"
+    }},
+    {{
+      "week": "Week 3",
+      "priority": "Medium",
+      "action": "<specific action>",
+      "expected_impact": "<measurable impact>"
+    }},
+    {{
+      "week": "Week 4",
+      "priority": "Medium|Low",
+      "action": "<specific action>",
+      "expected_impact": "<measurable impact>"
     }}
   ]
 }}
 
-Be specific, practical, and client-ready. Focus on high-impact, quick-win optimizations."""
+REMEMBER - EVERY recommendation must include:
+✓ Exact current numbers
+✓ Specific target numbers  
+✓ Ready-to-use examples
+✓ Measurable impact estimates
+
+Be professional, specific, and client-ready. Focus on high-impact optimizations."""
 
     try:
         openai_client = AsyncOpenAI(api_key=api_key)
         
         response = await openai_client.chat.completions.create(
-            model="gpt-4o-mini",  # Cost-effective model
+            model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are an expert SEO consultant providing professional, actionable SEO audits. Always respond with valid JSON only."},
+                {
+                    "role": "system", 
+                    "content": "You are an expert SEO consultant providing professional, data-driven SEO audits with specific metrics, exact numbers, and actionable examples. Always respond with valid JSON only. EVERY recommendation MUST include: current state with numbers, target state with numbers, ready-to-use examples, and measurable impact estimates. Never give generic advice."
+                },
                 {"role": "user", "content": analysis_prompt}
             ],
             temperature=0.7,
