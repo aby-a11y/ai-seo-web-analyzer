@@ -12,22 +12,54 @@ const HomePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // ✨ NEW: Normalize URL function
+  const normalizeUrl = (inputUrl) => {
+    let normalized = inputUrl.trim();
+    
+    // Remove leading/trailing spaces
+    normalized = normalized.trim();
+    
+    // If URL doesn't have protocol, add https://
+    if (!normalized.match(/^https?:\/\//i)) {
+      normalized = 'https://' + normalized;
+    }
+    
+    // If URL doesn't have www., add it (optional - you can remove this if not needed)
+    // This ensures consistency: example.com → https://www.example.com
+    try {
+      const urlObj = new URL(normalized);
+      if (!urlObj.hostname.startsWith('www.') && !urlObj.hostname.match(/^localhost/i)) {
+        urlObj.hostname = 'www.' + urlObj.hostname;
+      }
+      normalized = urlObj.toString();
+    } catch (e) {
+      // If URL parsing fails, return as-is
+      return normalized;
+    }
+    
+    return normalized;
+  };
+
   const handleAnalyze = async (e) => {
     e.preventDefault();
     setError('');
     
+    // ✨ UPDATED: Normalize URL before validation
+    const normalizedUrl = normalizeUrl(url);
+    
     // Validate URL
     try {
-      new URL(url);
+      new URL(normalizedUrl);
     } catch {
-      setError('Please enter a valid URL (including http:// or https://)');
+      setError('Please enter a valid website URL (e.g., example.com or https://example.com)');
       return;
     }
 
     setLoading(true);
     
     try {
-      const response = await axios.post(`${API}/seo/analyze`, { url });
+      // ✨ UPDATED: Use normalized URL
+      const response = await axios.post(`${API}/seo/analyze`, { url: normalizedUrl });
       const reportId = response.data.id;
       navigate(`/report/${reportId}`);
     } catch (err) {
@@ -78,7 +110,7 @@ const HomePage = () => {
                   type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="Enter website URL (e.g., https://example.com)"
+                  placeholder="Enter website URL (e.g., example.com or pixelglobal.com)"
                   className="flex-1 px-4 py-5 text-lg outline-none rounded-l-2xl"
                   disabled={loading}
                   data-testid="url-input"
@@ -109,6 +141,10 @@ const HomePage = () => {
                 {error}
               </div>
             )}
+            {/* ✨ NEW: Helper text */}
+            <p className="mt-3 text-sm text-gray-500">
+              💡 Just enter the domain name - we'll handle the rest! (e.g., pixelglobal.com)
+            </p>
           </div>
         </div>
 
@@ -137,7 +173,7 @@ const HomePage = () => {
           <FeatureCard
             icon={<Sparkles className="w-8 h-8" />}
             title="AI-Powered"
-            description="Leveraging GPT-5.2 for expert-level SEO consulting and analysis."
+            description="Leveraging GPT-4o-mini for expert-level SEO consulting and analysis."
           />
           <FeatureCard
             icon={<FileText className="w-8 h-8" />}
