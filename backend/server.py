@@ -138,7 +138,8 @@ async def scrape_website(url: str) -> Dict[str, Any]:
         technical_seo = check_technical_seo(soup, final_url)
         onpage_seo = check_onpage_seo(soup)
         performance = check_performance(response)
-        
+        schema_analysis = validate_schema_markup(soup, str(url))
+       
         # Extract title
         title = soup.find('title')
         title_text = title.get_text().strip() if title else None
@@ -205,6 +206,9 @@ async def scrape_website(url: str) -> Dict[str, Any]:
             'canonical_issues': technical_seo['canonical_issues'],
             'robots_txt_found': technical_seo['robots_txt_found'],
             'sitemap_found': technical_seo['sitemap_found'],
+            'schema_analysis': schema_analysis,
+            'has_schema': schema_analysis['has_schema'],
+            'schema_types': schema_analysis['schema_types'],
         }
         
     except Exception as e:
