@@ -167,6 +167,108 @@ const ReportPage = () => {
           </div>
         </div>
 
+        {/* ========== TECHNICAL SEO SECTION (NEW) ========== */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="technical-seo-section">
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2 mb-6">
+            <CheckCircle className="w-7 h-7 text-indigo-600" />
+            <span>Technical SEO</span>
+          </h2>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Canonical URL */}
+            <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-indigo-500 hover:shadow-md transition-shadow">
+              <p className="text-sm text-gray-600 mb-2 font-medium">Canonical Tag</p>
+              <div className="flex items-center space-x-2 mb-2">
+                {report.canonical_url ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="font-bold text-green-700">Present</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <span className="font-bold text-red-700">Missing</span>
+                  </>
+                )}
+              </div>
+              {report.canonical_url && (
+                <p className="text-xs text-gray-600 break-all mt-2 bg-white p-2 rounded">
+                  {report.canonical_url}
+                </p>
+              )}
+              {!report.canonical_url && (
+                <p className="text-xs text-gray-600 mt-2">
+                  Add canonical tag to avoid duplicate content issues
+                </p>
+              )}
+            </div>
+
+            {/* SSL Certificate */}
+            <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-green-500 hover:shadow-md transition-shadow">
+              <p className="text-sm text-gray-600 mb-2 font-medium">SSL Certificate</p>
+              <div className="flex items-center space-x-2 mb-2">
+                {report.ssl_enabled ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="font-bold text-green-700">Enabled</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <span className="font-bold text-red-700">Disabled</span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                {report.ssl_enabled ? 'Secure HTTPS connection ✓' : 'HTTP only - migrate to HTTPS'}
+              </p>
+            </div>
+
+            {/* Robots.txt */}
+            <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-purple-500 hover:shadow-md transition-shadow">
+              <p className="text-sm text-gray-600 mb-2 font-medium">Robots.txt</p>
+              <div className="flex items-center space-x-2 mb-2">
+                {report.robots_txt_found ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="font-bold text-green-700">Found</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                    <span className="font-bold text-yellow-700">Not Found</span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                {report.robots_txt_found ? 'Crawl instructions present' : 'Add robots.txt for better indexing'}
+              </p>
+            </div>
+
+            {/* Sitemap */}
+            <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-blue-500 hover:shadow-md transition-shadow">
+              <p className="text-sm text-gray-600 mb-2 font-medium">XML Sitemap</p>
+              <div className="flex items-center space-x-2 mb-2">
+                {report.sitemap_found ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="font-bold text-green-700">Found</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                    <span className="font-bold text-yellow-700">Not Found</span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                {report.sitemap_found ? 'Sitemap.xml accessible' : 'Create sitemap.xml for better crawling'}
+              </p>
+            </div>
+          </div>
+        </div>
+        {/* ========== END TECHNICAL SEO SECTION ========== */}
+
         {/* SEO Issues */}
         {report.seo_issues && report.seo_issues.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="seo-issues-section">
