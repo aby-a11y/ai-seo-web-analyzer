@@ -131,12 +131,20 @@ async def scrape_website(url: str) -> Dict[str, Any]:
             response.raise_for_status()
             
         soup = BeautifulSoup(response.text, 'html.parser')
-        technical_seo = check_technical_seo(soup, response.url)
+        
+        # ✅ FIX: Convert response.url to string
+        final_url = str(response.url)
+        
+        technical_seo = check_technical_seo(soup, final_url)
         onpage_seo = check_onpage_seo(soup)
         performance = check_performance(response)
+        
         # Extract title
         title = soup.find('title')
         title_text = title.get_text().strip() if title else None
+        
+        # ... rest of the code
+
         
         # Extract meta description
         meta_desc = soup.find('meta', attrs={'name': 'description'})
