@@ -386,8 +386,12 @@ def validate_schema_markup(soup, url):
     schema_data["schema_types"] = list(set(schema_data["schema_types"]))
     
     return schema_data
+
+
 def analyze_internal_links(soup, base_url):
     """Analyze internal linking structure"""
+    ...
+
     from urllib.parse import urlparse, urljoin
     
     parsed_base = urlparse(base_url)
