@@ -15,7 +15,6 @@ from openai import AsyncOpenAI
 import json
 import re
 
-
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
@@ -132,7 +131,9 @@ async def scrape_website(url: str) -> Dict[str, Any]:
             response.raise_for_status()
             
         soup = BeautifulSoup(response.text, 'html.parser')
-        
+        technical_seo = check_technical_seo(soup, response.url)
+        onpage_seo = check_onpage_seo(soup)
+        performance = check_performance(response)
         # Extract title
         title = soup.find('title')
         title_text = title.get_text().strip() if title else None
@@ -367,6 +368,7 @@ Be professional, specific, and client-ready. Focus on high-impact optimizations.
         )
         
         return report
+
         
     except Exception as e:
         logger.error(f"Error in AI analysis: {str(e)}")
@@ -476,6 +478,126 @@ app.add_middleware(
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+# ========== NEW FEATURES: Add these helper functions ==========
+
+def check_technical_seo(soup, final_url):
+    """Technical SEO checks: canonical, robots.txt, sitemap, noindex"""
+    from urllib.parse import urlparse, urljoin
+    
+    # Canonical
+    canonical_tag = soup.find("link", rel=lambda v: v and "canonical" in v.lower())
+    canonical_url = canonical_tag.get("href") if canonical_tag else None
+    canonical_status = "Present" if canonical_url else "Missing"
+    
+    # robots.txt & sitemap
+    parsed = urlparse(final_url)
+    root = f"{parsed.scheme}://{parsed.netloc}"
+    
+    robots_url = urljoin(root, "/robots.txt")
+    robots_exists = False
+    try:
+        import httpx
+        with httpx.Client(timeout=10) as client:
+            robots_exists = client.get(robots_url).status_code == 200
+    except:
+        robots_exists = False
+    
+    sitemap_url = urljoin(root, "/sitemap.xml")
+    sitemap_exists = False
+    try:
+        import httpx
+        with httpx.Client(timeout=10) as client:
+            sitemap_exists = client.get(sitemap_url).status_code == 200
+    except:
+        sitemap_exists = False
+    
+    # Noindex
+    noindex_meta = soup.find("meta", attrs={"name": "robots"})
+    noindex = False
+    if noindex_meta:
+        content = (noindex_meta.get("content") or "").lower()
+        noindex = "noindex" in content
+    
+    # SSL
+    ssl_enabled = final_url.startswith("https://")
+    
+    return {
+        "canonical_status": canonical_status,
+        "canonical_url": canonical_url,
+        "robots_txt_found": robots_exists,
+        "robots_txt_url": robots_url,
+        "sitemap_found": sitemap_exists,
+        "sitemap_url": sitemap_url,
+        "noindex": noindex,
+        "ssl_enabled": ssl_enabled,
+    }
+
+
+def check_onpage_seo(soup):
+    """On-page checks: title, meta, headings, images, word count"""
+    # Title
+    title = soup.title.string.strip() if soup.title and soup.title.string else ""
+    title_len = len(title)
+    title_status = "Optimal" if 50 <= title_len <= 60 else ("Too Long" if title_len > 60 else "Too Short")
+    
+    # Meta description
+    meta_desc_tag = soup.find("meta", attrs={"name": "description"})
+    meta_desc = meta_desc_tag.get("content", "").strip() if meta_desc_tag else ""
+    meta_len = len(meta_desc)
+    meta_status = "Optimal" if 120 <= meta_len <= 160 else ("Too Long" if meta_len > 160 else "Too Short")
+    
+    # Headings
+    h1_count = len(soup.find_all("h1"))
+    h2_count = len(soup.find_all("h2"))
+    h3_count = len(soup.find_all("h3"))
+    
+    # Images + Alt
+    images = soup.find_all("img")
+    total_imgs = len(images)
+    imgs_without_alt = sum(1 for img in images if not img.get("alt"))
+    
+    # Word count
+    text_soup = BeautifulSoup(str(soup), "html.parser")
+    for script in text_soup(["script", "style", "noscript"]):
+        script.decompose()
+    text = text_soup.get_text(separator=" ")
+    words = [w for w in text.split() if w.strip()]
+    word_count = len(words)
+    
+    return {
+        "title": title,
+        "title_length": title_len,
+        "title_status": title_status,
+        "meta_description": meta_desc,
+        "meta_length": meta_len,
+        "meta_status": meta_status,
+        "h1_count": h1_count,
+        "h2_count": h2_count,
+        "h3_count": h3_count,
+        "total_images": total_imgs,
+        "images_without_alt": imgs_without_alt,
+        "word_count": word_count,
+    }
+
+
+def check_performance(response_obj):
+    """Performance: page size, resource counts"""
+    size_bytes = len(response_obj.content)
+    size_mb = round(size_bytes / (1024 * 1024), 2)
+    
+    soup = BeautifulSoup(response_obj.text, "html.parser")
+    scripts = soup.find_all("script", src=True)
+    links_css = soup.find_all("link", rel=lambda v: v and "stylesheet" in v.lower())
+    imgs = soup.find_all("img")
+    
+    return {
+        "page_size_mb": size_mb,
+        "page_size_status": "Good" if size_mb < 5 else "Large",
+        "total_resources": 1 + len(scripts) + len(links_css) + len(imgs),
+        "js_count": len(scripts),
+        "css_count": len(links_css),
+        "image_count": len(imgs),
+    }
 
 
 # For Railway deployment
