@@ -489,24 +489,73 @@ async def shutdown_db_client():
 # ========== NEW FEATURES: Add these helper functions ==========
 
 def check_technical_seo(soup, final_url):
-    """Technical SEO checks: canonical, robots.txt, sitemap, noindex"""
+    """Enhanced Technical SEO checks with detailed canonical analysis"""
     from urllib.parse import urlparse, urljoin
     
-    # Canonical
-    canonical_tag = soup.find("link", rel=lambda v: v and "canonical" in v.lower())
-    canonical_url = canonical_tag.get("href") if canonical_tag else None
-    canonical_status = "Present" if canonical_url else "Missing"
-    
-    # robots.txt & sitemap
     parsed = urlparse(final_url)
     root = f"{parsed.scheme}://{parsed.netloc}"
     
+    # ========== CANONICAL TAG ANALYSIS (ENHANCED) ==========
+    canonical_tags = soup.find_all("link", rel=lambda v: v and "canonical" in str(v).lower())
+    
+    canonical_issues = []
+    canonical_status = "Not Set"
+    canonical_url = None
+    
+    if len(canonical_tags) == 0:
+        canonical_issues.append("⚠️ No canonical tag found - Add self-referencing canonical")
+        canonical_status = "Missing"
+    elif len(canonical_tags) > 1:
+        canonical_issues.append(f"❌ Multiple canonical tags found ({len(canonical_tags)}) - Remove duplicates")
+        canonical_status = "Error"
+        canonical_url = canonical_tags[0].get("href")
+    else:
+        canonical_tag = canonical_tags[0]
+        canonical_url = canonical_tag.get("href", "").strip()
+        
+        if not canonical_url:
+            canonical_issues.append("❌ Empty canonical tag - Add valid URL")
+            canonical_status = "Empty"
+        else:
+            # Parse canonical URL
+            canonical_parsed = urlparse(canonical_url)
+            
+            # Check 1: Relative vs Absolute URL
+            if not canonical_parsed.scheme:
+                canonical_issues.append("⚠️ Relative canonical URL - Use absolute URL with https://")
+                canonical_url = urljoin(root, canonical_url)
+            
+            # Check 2: Self-referencing validation
+            current_clean = final_url.rstrip('/').lower()
+            canonical_clean = canonical_url.rstrip('/').lower()
+            
+            if current_clean != canonical_clean:
+                canonical_issues.append(f"⚠️ Non-self-referencing canonical: {canonical_url}")
+                canonical_status = "Different URL"
+            else:
+                canonical_status = "✅ Valid (Self-referencing)"
+            
+            # Check 3: HTTP vs HTTPS mismatch
+            if canonical_parsed.scheme == "http" and parsed.scheme == "https":
+                canonical_issues.append("❌ HTTPS page has HTTP canonical - Update to HTTPS")
+                canonical_status = "Protocol Mismatch"
+            
+            # Check 4: Cross-domain canonical
+            if canonical_parsed.netloc and canonical_parsed.netloc != parsed.netloc:
+                canonical_issues.append(f"⚠️ Cross-domain canonical: {canonical_parsed.netloc}")
+                canonical_status = "Cross-domain"
+    
+    # ========== ROBOTS.TXT & SITEMAP ==========
     robots_url = urljoin(root, "/robots.txt")
     robots_exists = False
+    robots_content = None
     try:
         import httpx
         with httpx.Client(timeout=10) as client:
-            robots_exists = client.get(robots_url).status_code == 200
+            robots_resp = client.get(robots_url)
+            robots_exists = robots_resp.status_code == 200
+            if robots_exists:
+                robots_content = robots_resp.text[:500]  # First 500 chars
     except:
         robots_exists = False
     
@@ -519,26 +568,36 @@ def check_technical_seo(soup, final_url):
     except:
         sitemap_exists = False
     
-    # Noindex
+    # ========== META ROBOTS / NOINDEX ==========
     noindex_meta = soup.find("meta", attrs={"name": "robots"})
     noindex = False
+    robots_directive = "Not Set"
     if noindex_meta:
         content = (noindex_meta.get("content") or "").lower()
+        robots_directive = content
         noindex = "noindex" in content
     
-    # SSL
+    # ========== SSL CHECK ==========
     ssl_enabled = final_url.startswith("https://")
     
     return {
+        # Canonical Analysis
         "canonical_status": canonical_status,
         "canonical_url": canonical_url,
+        "canonical_issues": canonical_issues,
+        "canonical_count": len(canonical_tags),
+        
+        # Technical Checks
         "robots_txt_found": robots_exists,
         "robots_txt_url": robots_url,
+        "robots_txt_preview": robots_content,
         "sitemap_found": sitemap_exists,
         "sitemap_url": sitemap_url,
         "noindex": noindex,
+        "robots_directive": robots_directive,
         "ssl_enabled": ssl_enabled,
     }
+
 
 
 def check_onpage_seo(soup):
