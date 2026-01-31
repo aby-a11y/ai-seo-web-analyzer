@@ -119,6 +119,346 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ========== Helper functions ==========
+def check_technical_seo(soup, final_url):
+    """Enhanced Technical SEO checks with detailed canonical analysis"""
+    from urllib.parse import urlparse, urljoin
+    
+    parsed = urlparse(final_url)
+    root = f"{parsed.scheme}://{parsed.netloc}"
+    
+    # ========== CANONICAL TAG ANALYSIS (ENHANCED) ==========
+    canonical_tags = soup.find_all("link", rel=lambda v: v and "canonical" in str(v).lower())
+    
+    canonical_issues = []
+    canonical_status = "Not Set"
+    canonical_url = None
+    
+    if len(canonical_tags) == 0:
+        canonical_issues.append("⚠️ No canonical tag found - Add self-referencing canonical")
+        canonical_status = "Missing"
+    elif len(canonical_tags) > 1:
+        canonical_issues.append(f"❌ Multiple canonical tags found ({len(canonical_tags)}) - Remove duplicates")
+        canonical_status = "Error"
+        canonical_url = canonical_tags[0].get("href")
+    else:
+        canonical_tag = canonical_tags[0]
+        canonical_url = canonical_tag.get("href", "").strip()
+        
+        if not canonical_url:
+            canonical_issues.append("❌ Empty canonical tag - Add valid URL")
+            canonical_status = "Empty"
+        else:
+            # Parse canonical URL
+            canonical_parsed = urlparse(canonical_url)
+            
+            # Check 1: Relative vs Absolute URL
+            if not canonical_parsed.scheme:
+                canonical_issues.append("⚠️ Relative canonical URL - Use absolute URL with https://")
+                canonical_url = urljoin(root, canonical_url)
+            
+            # Check 2: Self-referencing validation
+            current_clean = final_url.rstrip('/').lower()
+            canonical_clean = canonical_url.rstrip('/').lower()
+            
+            if current_clean != canonical_clean:
+                canonical_issues.append(f"⚠️ Non-self-referencing canonical: {canonical_url}")
+                canonical_status = "Different URL"
+            else:
+                canonical_status = "✅ Valid (Self-referencing)"
+            
+            # Check 3: HTTP vs HTTPS mismatch
+            if canonical_parsed.scheme == "http" and parsed.scheme == "https":
+                canonical_issues.append("❌ HTTPS page has HTTP canonical - Update to HTTPS")
+                canonical_status = "Protocol Mismatch"
+            
+            # Check 4: Cross-domain canonical
+            if canonical_parsed.netloc and canonical_parsed.netloc != parsed.netloc:
+                canonical_issues.append(f"⚠️ Cross-domain canonical: {canonical_parsed.netloc}")
+                canonical_status = "Cross-domain"
+    
+    # ========== ROBOTS.TXT & SITEMAP ==========
+    robots_url = urljoin(root, "/robots.txt")
+    robots_exists = False
+    robots_content = None
+    try:
+        import httpx
+        with httpx.Client(timeout=10) as client:
+            robots_resp = client.get(robots_url)
+            robots_exists = robots_resp.status_code == 200
+            if robots_exists:
+                robots_content = robots_resp.text[:500]  # First 500 chars
+    except:
+        robots_exists = False
+    
+    sitemap_url = urljoin(root, "/sitemap.xml")
+    sitemap_exists = False
+    try:
+        import httpx
+        with httpx.Client(timeout=10) as client:
+            sitemap_exists = client.get(sitemap_url).status_code == 200
+    except:
+        sitemap_exists = False
+    
+    # ========== META ROBOTS / NOINDEX ==========
+    noindex_meta = soup.find("meta", attrs={"name": "robots"})
+    noindex = False
+    robots_directive = "Not Set"
+    if noindex_meta:
+        content = (noindex_meta.get("content") or "").lower()
+        robots_directive = content
+        noindex = "noindex" in content
+    
+    # ========== SSL CHECK ==========
+    ssl_enabled = final_url.startswith("https://")
+    
+    return {
+        # Canonical Analysis
+        "canonical_status": canonical_status,
+        "canonical_url": canonical_url,
+        "canonical_issues": canonical_issues,
+        "canonical_count": len(canonical_tags),
+        
+        # Technical Checks
+        "robots_txt_found": robots_exists,
+        "robots_txt_url": robots_url,
+        "robots_txt_preview": robots_content,
+        "sitemap_found": sitemap_exists,
+        "sitemap_url": sitemap_url,
+        "noindex": noindex,
+        "robots_directive": robots_directive,
+        "ssl_enabled": ssl_enabled,
+    }
+
+
+
+def check_onpage_seo(soup):
+    """On-page checks: title, meta, headings, images, word count"""
+    # Title
+    title = soup.title.string.strip() if soup.title and soup.title.string else ""
+    title_len = len(title)
+    title_status = "Optimal" if 50 <= title_len <= 60 else ("Too Long" if title_len > 60 else "Too Short")
+    
+    # Meta description
+    meta_desc_tag = soup.find("meta", attrs={"name": "description"})
+    meta_desc = meta_desc_tag.get("content", "").strip() if meta_desc_tag else ""
+    meta_len = len(meta_desc)
+    meta_status = "Optimal" if 120 <= meta_len <= 160 else ("Too Long" if meta_len > 160 else "Too Short")
+    
+    # Headings
+    h1_count = len(soup.find_all("h1"))
+    h2_count = len(soup.find_all("h2"))
+    h3_count = len(soup.find_all("h3"))
+    
+    # Images + Alt
+    images = soup.find_all("img")
+    total_imgs = len(images)
+    imgs_without_alt = sum(1 for img in images if not img.get("alt"))
+    
+    # Word count
+    text_soup = BeautifulSoup(str(soup), "html.parser")
+    for script in text_soup(["script", "style", "noscript"]):
+        script.decompose()
+    text = text_soup.get_text(separator=" ")
+    words = [w for w in text.split() if w.strip()]
+    word_count = len(words)
+    
+    return {
+        "title": title,
+        "title_length": title_len,
+        "title_status": title_status,
+        "meta_description": meta_desc,
+        "meta_length": meta_len,
+        "meta_status": meta_status,
+        "h1_count": h1_count,
+        "h2_count": h2_count,
+        "h3_count": h3_count,
+        "total_images": total_imgs,
+        "images_without_alt": imgs_without_alt,
+        "word_count": word_count,
+    }
+
+
+def check_performance(response_obj):
+    """Performance: page size, resource counts"""
+    size_bytes = len(response_obj.content)
+    size_mb = round(size_bytes / (1024 * 1024), 2)
+    
+    soup = BeautifulSoup(response_obj.text, "html.parser")
+    scripts = soup.find_all("script", src=True)
+    links_css = soup.find_all("link", rel=lambda v: v and "stylesheet" in v.lower())
+    imgs = soup.find_all("img")
+    
+    return {
+        "page_size_mb": size_mb,
+        "page_size_status": "Good" if size_mb < 5 else "Large",
+        "total_resources": 1 + len(scripts) + len(links_css) + len(imgs),
+        "js_count": len(scripts),
+        "css_count": len(links_css),
+        "image_count": len(imgs),
+    }
+
+def validate_schema_markup(soup, url):
+    """Validate and analyze structured data (JSON-LD, Microdata, RDFa)"""
+    
+    schema_data = {
+        "has_schema": False,
+        "schema_types": [],
+        "schema_count": 0,
+        "validation_issues": [],
+        "recommendations": [],
+        "json_ld_scripts": []
+    }
+    
+    # ========== JSON-LD Detection ==========
+    json_ld_scripts = soup.find_all('script', type='application/ld+json')
+    
+    if json_ld_scripts:
+        schema_data["has_schema"] = True
+        schema_data["schema_count"] = len(json_ld_scripts)
+        
+        for idx, script in enumerate(json_ld_scripts):
+            try:
+                # Parse JSON-LD
+                json_content = json.loads(script.string)
+                
+                # Extract @type
+                schema_type = None
+                if isinstance(json_content, dict):
+                    schema_type = json_content.get('@type')
+                    if isinstance(schema_type, list):
+                        schema_data["schema_types"].extend(schema_type)
+                    elif schema_type:
+                        schema_data["schema_types"].append(schema_type)
+                
+                # Store parsed data
+                schema_data["json_ld_scripts"].append({
+                    "index": idx + 1,
+                    "type": schema_type or "Unknown",
+                    "valid": True,
+                    "data": json_content
+                })
+                
+            except json.JSONDecodeError as e:
+                schema_data["validation_issues"].append(
+                    f"❌ JSON-LD #{idx + 1}: Invalid JSON syntax - {str(e)}"
+                )
+                schema_data["json_ld_scripts"].append({
+                    "index": idx + 1,
+                    "valid": False,
+                    "error": str(e)
+                })
+    
+    # ========== MICRODATA Detection ==========
+    microdata_items = soup.find_all(attrs={"itemtype": True})
+    if microdata_items:
+        schema_data["has_schema"] = True
+        schema_data["schema_count"] += len(microdata_items)
+        for item in microdata_items:
+            item_type = item.get('itemtype', '').split('/')[-1]
+            if item_type:
+                schema_data["schema_types"].append(f"{item_type} (Microdata)")
+    
+    # ========== Validation & Recommendations ==========
+    if not schema_data["has_schema"]:
+        schema_data["recommendations"].append(
+            "⚠️ No structured data found - Add Schema.org markup for better search visibility"
+        )
+    
+    # Check for common schema types based on page content
+    page_text = soup.get_text().lower()
+    
+    if not schema_data["schema_types"]:
+        # Suggest schema based on content
+        if any(word in page_text for word in ['product', 'price', 'buy', 'shop']):
+            schema_data["recommendations"].append("💡 Consider adding Product schema")
+        
+        if any(word in page_text for word in ['article', 'blog', 'posted', 'author']):
+            schema_data["recommendations"].append("💡 Consider adding Article schema")
+        
+        if any(word in page_text for word in ['review', 'rating', 'stars']):
+            schema_data["recommendations"].append("💡 Consider adding Review schema")
+        
+        if any(word in page_text for word in ['event', 'date', 'location', 'venue']):
+            schema_data["recommendations"].append("💡 Consider adding Event schema")
+    
+    # Remove duplicates from types
+    schema_data["schema_types"] = list(set(schema_data["schema_types"]))
+    
+    return schema_data
+def analyze_internal_links(soup, base_url):
+    """Analyze internal linking structure"""
+    from urllib.parse import urlparse, urljoin
+    
+    parsed_base = urlparse(base_url)
+    base_domain = parsed_base.netloc
+    
+    internal_links = []
+    external_links = []
+    broken_links = []
+    
+    all_links = soup.find_all('a', href=True)
+    
+    for link in all_links:
+        href = link.get('href', '').strip()
+        
+        if not href or href.startswith('#') or href.startswith('javascript:') or href.startswith('mailto:'):
+            continue
+        
+        # Convert to absolute URL
+        absolute_url = urljoin(base_url, href)
+        parsed_link = urlparse(absolute_url)
+        
+        link_info = {
+            "url": absolute_url,
+            "anchor_text": link.get_text().strip()[:100],  # First 100 chars
+            "has_nofollow": 'nofollow' in link.get('rel', []),
+            "opens_new_tab": link.get('target') == '_blank'
+        }
+        
+        # Classify as internal or external
+        if parsed_link.netloc == base_domain or parsed_link.netloc == '':
+            internal_links.append(link_info)
+        else:
+            external_links.append(link_info)
+    
+    # Calculate statistics
+    total_links = len(all_links)
+    internal_count = len(internal_links)
+    external_count = len(external_links)
+    
+    internal_ratio = round((internal_count / total_links * 100), 2) if total_links > 0 else 0
+    
+    # Recommendations
+    recommendations = []
+    
+    if internal_count < 3:
+        recommendations.append("⚠️ Very few internal links - Add more internal linking for better SEO")
+    
+    if internal_ratio < 70:
+        recommendations.append(f"⚠️ Internal link ratio is {internal_ratio}% - Aim for 70-80% internal links")
+    
+    nofollow_count = sum(1 for link in internal_links if link['has_nofollow'])
+    if nofollow_count > 0:
+        recommendations.append(f"⚠️ {nofollow_count} internal links have nofollow - Remove nofollow from internal links")
+    
+    # Check for anchor text quality
+    empty_anchors = sum(1 for link in internal_links if not link['anchor_text'])
+    if empty_anchors > 0:
+        recommendations.append(f"❌ {empty_anchors} links have empty anchor text - Add descriptive anchor text")
+    
+    return {
+        "total_links": total_links,
+        "internal_count": internal_count,
+        "external_count": external_count,
+        "internal_ratio": internal_ratio,
+        "internal_links": internal_links[:20],  # First 20 for response size
+        "external_links": external_links[:10],  # First 10
+        "nofollow_internal_count": nofollow_count,
+        "empty_anchor_count": empty_anchors,
+        "recommendations": recommendations
+    }
+    
 
 # Web Scraping Function
 async def scrape_website(url: str) -> Dict[str, Any]:
@@ -548,345 +888,7 @@ async def shutdown_db_client():
     client.close()
 # ========== NEW FEATURES: Add these helper functions ==========
 
-def check_technical_seo(soup, final_url):
-    """Enhanced Technical SEO checks with detailed canonical analysis"""
-    from urllib.parse import urlparse, urljoin
-    
-    parsed = urlparse(final_url)
-    root = f"{parsed.scheme}://{parsed.netloc}"
-    
-    # ========== CANONICAL TAG ANALYSIS (ENHANCED) ==========
-    canonical_tags = soup.find_all("link", rel=lambda v: v and "canonical" in str(v).lower())
-    
-    canonical_issues = []
-    canonical_status = "Not Set"
-    canonical_url = None
-    
-    if len(canonical_tags) == 0:
-        canonical_issues.append("⚠️ No canonical tag found - Add self-referencing canonical")
-        canonical_status = "Missing"
-    elif len(canonical_tags) > 1:
-        canonical_issues.append(f"❌ Multiple canonical tags found ({len(canonical_tags)}) - Remove duplicates")
-        canonical_status = "Error"
-        canonical_url = canonical_tags[0].get("href")
-    else:
-        canonical_tag = canonical_tags[0]
-        canonical_url = canonical_tag.get("href", "").strip()
-        
-        if not canonical_url:
-            canonical_issues.append("❌ Empty canonical tag - Add valid URL")
-            canonical_status = "Empty"
-        else:
-            # Parse canonical URL
-            canonical_parsed = urlparse(canonical_url)
-            
-            # Check 1: Relative vs Absolute URL
-            if not canonical_parsed.scheme:
-                canonical_issues.append("⚠️ Relative canonical URL - Use absolute URL with https://")
-                canonical_url = urljoin(root, canonical_url)
-            
-            # Check 2: Self-referencing validation
-            current_clean = final_url.rstrip('/').lower()
-            canonical_clean = canonical_url.rstrip('/').lower()
-            
-            if current_clean != canonical_clean:
-                canonical_issues.append(f"⚠️ Non-self-referencing canonical: {canonical_url}")
-                canonical_status = "Different URL"
-            else:
-                canonical_status = "✅ Valid (Self-referencing)"
-            
-            # Check 3: HTTP vs HTTPS mismatch
-            if canonical_parsed.scheme == "http" and parsed.scheme == "https":
-                canonical_issues.append("❌ HTTPS page has HTTP canonical - Update to HTTPS")
-                canonical_status = "Protocol Mismatch"
-            
-            # Check 4: Cross-domain canonical
-            if canonical_parsed.netloc and canonical_parsed.netloc != parsed.netloc:
-                canonical_issues.append(f"⚠️ Cross-domain canonical: {canonical_parsed.netloc}")
-                canonical_status = "Cross-domain"
-    
-    # ========== ROBOTS.TXT & SITEMAP ==========
-    robots_url = urljoin(root, "/robots.txt")
-    robots_exists = False
-    robots_content = None
-    try:
-        import httpx
-        with httpx.Client(timeout=10) as client:
-            robots_resp = client.get(robots_url)
-            robots_exists = robots_resp.status_code == 200
-            if robots_exists:
-                robots_content = robots_resp.text[:500]  # First 500 chars
-    except:
-        robots_exists = False
-    
-    sitemap_url = urljoin(root, "/sitemap.xml")
-    sitemap_exists = False
-    try:
-        import httpx
-        with httpx.Client(timeout=10) as client:
-            sitemap_exists = client.get(sitemap_url).status_code == 200
-    except:
-        sitemap_exists = False
-    
-    # ========== META ROBOTS / NOINDEX ==========
-    noindex_meta = soup.find("meta", attrs={"name": "robots"})
-    noindex = False
-    robots_directive = "Not Set"
-    if noindex_meta:
-        content = (noindex_meta.get("content") or "").lower()
-        robots_directive = content
-        noindex = "noindex" in content
-    
-    # ========== SSL CHECK ==========
-    ssl_enabled = final_url.startswith("https://")
-    
-    return {
-        # Canonical Analysis
-        "canonical_status": canonical_status,
-        "canonical_url": canonical_url,
-        "canonical_issues": canonical_issues,
-        "canonical_count": len(canonical_tags),
-        
-        # Technical Checks
-        "robots_txt_found": robots_exists,
-        "robots_txt_url": robots_url,
-        "robots_txt_preview": robots_content,
-        "sitemap_found": sitemap_exists,
-        "sitemap_url": sitemap_url,
-        "noindex": noindex,
-        "robots_directive": robots_directive,
-        "ssl_enabled": ssl_enabled,
-    }
 
-
-
-def check_onpage_seo(soup):
-    """On-page checks: title, meta, headings, images, word count"""
-    # Title
-    title = soup.title.string.strip() if soup.title and soup.title.string else ""
-    title_len = len(title)
-    title_status = "Optimal" if 50 <= title_len <= 60 else ("Too Long" if title_len > 60 else "Too Short")
-    
-    # Meta description
-    meta_desc_tag = soup.find("meta", attrs={"name": "description"})
-    meta_desc = meta_desc_tag.get("content", "").strip() if meta_desc_tag else ""
-    meta_len = len(meta_desc)
-    meta_status = "Optimal" if 120 <= meta_len <= 160 else ("Too Long" if meta_len > 160 else "Too Short")
-    
-    # Headings
-    h1_count = len(soup.find_all("h1"))
-    h2_count = len(soup.find_all("h2"))
-    h3_count = len(soup.find_all("h3"))
-    
-    # Images + Alt
-    images = soup.find_all("img")
-    total_imgs = len(images)
-    imgs_without_alt = sum(1 for img in images if not img.get("alt"))
-    
-    # Word count
-    text_soup = BeautifulSoup(str(soup), "html.parser")
-    for script in text_soup(["script", "style", "noscript"]):
-        script.decompose()
-    text = text_soup.get_text(separator=" ")
-    words = [w for w in text.split() if w.strip()]
-    word_count = len(words)
-    
-    return {
-        "title": title,
-        "title_length": title_len,
-        "title_status": title_status,
-        "meta_description": meta_desc,
-        "meta_length": meta_len,
-        "meta_status": meta_status,
-        "h1_count": h1_count,
-        "h2_count": h2_count,
-        "h3_count": h3_count,
-        "total_images": total_imgs,
-        "images_without_alt": imgs_without_alt,
-        "word_count": word_count,
-    }
-
-
-def check_performance(response_obj):
-    """Performance: page size, resource counts"""
-    size_bytes = len(response_obj.content)
-    size_mb = round(size_bytes / (1024 * 1024), 2)
-    
-    soup = BeautifulSoup(response_obj.text, "html.parser")
-    scripts = soup.find_all("script", src=True)
-    links_css = soup.find_all("link", rel=lambda v: v and "stylesheet" in v.lower())
-    imgs = soup.find_all("img")
-    
-    return {
-        "page_size_mb": size_mb,
-        "page_size_status": "Good" if size_mb < 5 else "Large",
-        "total_resources": 1 + len(scripts) + len(links_css) + len(imgs),
-        "js_count": len(scripts),
-        "css_count": len(links_css),
-        "image_count": len(imgs),
-    }
-
-def validate_schema_markup(soup, url):
-    """Validate and analyze structured data (JSON-LD, Microdata, RDFa)"""
-    
-    schema_data = {
-        "has_schema": False,
-        "schema_types": [],
-        "schema_count": 0,
-        "validation_issues": [],
-        "recommendations": [],
-        "json_ld_scripts": []
-    }
-    
-    # ========== JSON-LD Detection ==========
-    json_ld_scripts = soup.find_all('script', type='application/ld+json')
-    
-    if json_ld_scripts:
-        schema_data["has_schema"] = True
-        schema_data["schema_count"] = len(json_ld_scripts)
-        
-        for idx, script in enumerate(json_ld_scripts):
-            try:
-                # Parse JSON-LD
-                json_content = json.loads(script.string)
-                
-                # Extract @type
-                schema_type = None
-                if isinstance(json_content, dict):
-                    schema_type = json_content.get('@type')
-                    if isinstance(schema_type, list):
-                        schema_data["schema_types"].extend(schema_type)
-                    elif schema_type:
-                        schema_data["schema_types"].append(schema_type)
-                
-                # Store parsed data
-                schema_data["json_ld_scripts"].append({
-                    "index": idx + 1,
-                    "type": schema_type or "Unknown",
-                    "valid": True,
-                    "data": json_content
-                })
-                
-            except json.JSONDecodeError as e:
-                schema_data["validation_issues"].append(
-                    f"❌ JSON-LD #{idx + 1}: Invalid JSON syntax - {str(e)}"
-                )
-                schema_data["json_ld_scripts"].append({
-                    "index": idx + 1,
-                    "valid": False,
-                    "error": str(e)
-                })
-    
-    # ========== MICRODATA Detection ==========
-    microdata_items = soup.find_all(attrs={"itemtype": True})
-    if microdata_items:
-        schema_data["has_schema"] = True
-        schema_data["schema_count"] += len(microdata_items)
-        for item in microdata_items:
-            item_type = item.get('itemtype', '').split('/')[-1]
-            if item_type:
-                schema_data["schema_types"].append(f"{item_type} (Microdata)")
-    
-    # ========== Validation & Recommendations ==========
-    if not schema_data["has_schema"]:
-        schema_data["recommendations"].append(
-            "⚠️ No structured data found - Add Schema.org markup for better search visibility"
-        )
-    
-    # Check for common schema types based on page content
-    page_text = soup.get_text().lower()
-    
-    if not schema_data["schema_types"]:
-        # Suggest schema based on content
-        if any(word in page_text for word in ['product', 'price', 'buy', 'shop']):
-            schema_data["recommendations"].append("💡 Consider adding Product schema")
-        
-        if any(word in page_text for word in ['article', 'blog', 'posted', 'author']):
-            schema_data["recommendations"].append("💡 Consider adding Article schema")
-        
-        if any(word in page_text for word in ['review', 'rating', 'stars']):
-            schema_data["recommendations"].append("💡 Consider adding Review schema")
-        
-        if any(word in page_text for word in ['event', 'date', 'location', 'venue']):
-            schema_data["recommendations"].append("💡 Consider adding Event schema")
-    
-    # Remove duplicates from types
-    schema_data["schema_types"] = list(set(schema_data["schema_types"]))
-    
-    return schema_data
-def analyze_internal_links(soup, base_url):
-    """Analyze internal linking structure"""
-    from urllib.parse import urlparse, urljoin
-    
-    parsed_base = urlparse(base_url)
-    base_domain = parsed_base.netloc
-    
-    internal_links = []
-    external_links = []
-    broken_links = []
-    
-    all_links = soup.find_all('a', href=True)
-    
-    for link in all_links:
-        href = link.get('href', '').strip()
-        
-        if not href or href.startswith('#') or href.startswith('javascript:') or href.startswith('mailto:'):
-            continue
-        
-        # Convert to absolute URL
-        absolute_url = urljoin(base_url, href)
-        parsed_link = urlparse(absolute_url)
-        
-        link_info = {
-            "url": absolute_url,
-            "anchor_text": link.get_text().strip()[:100],  # First 100 chars
-            "has_nofollow": 'nofollow' in link.get('rel', []),
-            "opens_new_tab": link.get('target') == '_blank'
-        }
-        
-        # Classify as internal or external
-        if parsed_link.netloc == base_domain or parsed_link.netloc == '':
-            internal_links.append(link_info)
-        else:
-            external_links.append(link_info)
-    
-    # Calculate statistics
-    total_links = len(all_links)
-    internal_count = len(internal_links)
-    external_count = len(external_links)
-    
-    internal_ratio = round((internal_count / total_links * 100), 2) if total_links > 0 else 0
-    
-    # Recommendations
-    recommendations = []
-    
-    if internal_count < 3:
-        recommendations.append("⚠️ Very few internal links - Add more internal linking for better SEO")
-    
-    if internal_ratio < 70:
-        recommendations.append(f"⚠️ Internal link ratio is {internal_ratio}% - Aim for 70-80% internal links")
-    
-    nofollow_count = sum(1 for link in internal_links if link['has_nofollow'])
-    if nofollow_count > 0:
-        recommendations.append(f"⚠️ {nofollow_count} internal links have nofollow - Remove nofollow from internal links")
-    
-    # Check for anchor text quality
-    empty_anchors = sum(1 for link in internal_links if not link['anchor_text'])
-    if empty_anchors > 0:
-        recommendations.append(f"❌ {empty_anchors} links have empty anchor text - Add descriptive anchor text")
-    
-    return {
-        "total_links": total_links,
-        "internal_count": internal_count,
-        "external_count": external_count,
-        "internal_ratio": internal_ratio,
-        "internal_links": internal_links[:20],  # First 20 for response size
-        "external_links": external_links[:10],  # First 10
-        "nofollow_internal_count": nofollow_count,
-        "empty_anchor_count": empty_anchors,
-        "recommendations": recommendations
-    }
-    
 
 
 # For Railway deployment
