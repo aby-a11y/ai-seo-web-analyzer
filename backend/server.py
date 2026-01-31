@@ -762,6 +762,79 @@ def validate_schema_markup(soup, url):
     schema_data["schema_types"] = list(set(schema_data["schema_types"]))
     
     return schema_data
+def analyze_internal_links(soup, base_url):
+    """Analyze internal linking structure"""
+    from urllib.parse import urlparse, urljoin
+    
+    parsed_base = urlparse(base_url)
+    base_domain = parsed_base.netloc
+    
+    internal_links = []
+    external_links = []
+    broken_links = []
+    
+    all_links = soup.find_all('a', href=True)
+    
+    for link in all_links:
+        href = link.get('href', '').strip()
+        
+        if not href or href.startswith('#') or href.startswith('javascript:') or href.startswith('mailto:'):
+            continue
+        
+        # Convert to absolute URL
+        absolute_url = urljoin(base_url, href)
+        parsed_link = urlparse(absolute_url)
+        
+        link_info = {
+            "url": absolute_url,
+            "anchor_text": link.get_text().strip()[:100],  # First 100 chars
+            "has_nofollow": 'nofollow' in link.get('rel', []),
+            "opens_new_tab": link.get('target') == '_blank'
+        }
+        
+        # Classify as internal or external
+        if parsed_link.netloc == base_domain or parsed_link.netloc == '':
+            internal_links.append(link_info)
+        else:
+            external_links.append(link_info)
+    
+    # Calculate statistics
+    total_links = len(all_links)
+    internal_count = len(internal_links)
+    external_count = len(external_links)
+    
+    internal_ratio = round((internal_count / total_links * 100), 2) if total_links > 0 else 0
+    
+    # Recommendations
+    recommendations = []
+    
+    if internal_count < 3:
+        recommendations.append("⚠️ Very few internal links - Add more internal linking for better SEO")
+    
+    if internal_ratio < 70:
+        recommendations.append(f"⚠️ Internal link ratio is {internal_ratio}% - Aim for 70-80% internal links")
+    
+    nofollow_count = sum(1 for link in internal_links if link['has_nofollow'])
+    if nofollow_count > 0:
+        recommendations.append(f"⚠️ {nofollow_count} internal links have nofollow - Remove nofollow from internal links")
+    
+    # Check for anchor text quality
+    empty_anchors = sum(1 for link in internal_links if not link['anchor_text'])
+    if empty_anchors > 0:
+        recommendations.append(f"❌ {empty_anchors} links have empty anchor text - Add descriptive anchor text")
+    
+    return {
+        "total_links": total_links,
+        "internal_count": internal_count,
+        "external_count": external_count,
+        "internal_ratio": internal_ratio,
+        "internal_links": internal_links[:20],  # First 20 for response size
+        "external_links": external_links[:10],  # First 10
+        "nofollow_internal_count": nofollow_count,
+        "empty_anchor_count": empty_anchors,
+        "recommendations": recommendations
+    }
+    
 
 
 # For Railway deployment
