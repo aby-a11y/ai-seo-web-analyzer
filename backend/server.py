@@ -139,6 +139,7 @@ async def scrape_website(url: str) -> Dict[str, Any]:
         onpage_seo = check_onpage_seo(soup)
         performance = check_performance(response)
         schema_analysis = validate_schema_markup(soup, str(url))
+        linking_analysis = analyze_internal_links(soup, str(url))
        
         # Extract title
         title = soup.find('title')
@@ -209,6 +210,9 @@ async def scrape_website(url: str) -> Dict[str, Any]:
             'schema_analysis': schema_analysis,
             'has_schema': schema_analysis['has_schema'],
             'schema_types': schema_analysis['schema_types'],
+            'linking_analysis': linking_analysis,
+            'total_links': linking_analysis['total_links'],
+            'internal_links_count': linking_analysis['internal_count'],
         }
         
     except Exception as e:
