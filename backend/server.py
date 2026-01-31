@@ -202,7 +202,7 @@ async def scrape_website(url: str) -> Dict[str, Any]:
             'canonical_url': canonical_url,
             'has_structured_data': len(structured_data) > 0,
             'full_html': response.text[:10000],  # First 10k chars for AI analysis
-            'status_code': response.status_code
+            'status_code': response.status_code,
             'technical_seo': technical_seo,  # Complete technical SEO object
             'canonical_issues': technical_seo['canonical_issues'],
             'robots_txt_found': technical_seo['robots_txt_found'],
