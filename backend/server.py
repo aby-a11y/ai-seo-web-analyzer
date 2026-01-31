@@ -232,7 +232,12 @@ async def analyze_with_ai(url: str, scraped_data: Dict[str, Any]) -> SEOReport:
     title_length = len(scraped_data.get('title', '')) if scraped_data.get('title') else 0
     meta_length = len(scraped_data.get('meta_description', '')) if scraped_data.get('meta_description') else 0
     
-    # Create enhanced analysis prompt with specific metrics
+    # Extract nested data safely
+    technical_seo = scraped_data.get('technical_seo', {})
+    schema_analysis = scraped_data.get('schema_analysis', {})
+    linking_analysis = scraped_data.get('linking_analysis', {})
+    
+    # Create enhanced analysis prompt with ALL metrics
     analysis_prompt = f"""You are a senior SEO consultant analyzing a website. Provide a comprehensive, data-driven SEO audit with SPECIFIC METRICS and ACTIONABLE recommendations.
 
 Website URL: {url}
@@ -263,20 +268,63 @@ Current Website Metrics:
 - Missing Alt Text: {scraped_data.get('images_without_alt', 0)} images
 - Target: 0 missing alt texts
 
-🔧 TECHNICAL
-- Structured Data: {'✓ Present' if scraped_data.get('has_structured_data', False) else '✗ Missing'}
-- Canonical URL: {scraped_data.get('canonical_url', '✗ Not set')}
-- OG Tags: {'✓ Present' if scraped_data.get('og_title') else '✗ Missing'}
+🔧 TECHNICAL SEO (ENHANCED!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔗 Canonical Tag Analysis:
+- Status: {technical_seo.get('canonical_status', 'Not Checked')}
+- URL: {technical_seo.get('canonical_url', 'Not set')}
+- Issues Found: {len(technical_seo.get('canonical_issues', []))} issues
+- Details: {'; '.join(technical_seo.get('canonical_issues', [])) or 'No issues'}
+
+🤖 Crawlability:
+- Robots.txt: {'✓ Found' if technical_seo.get('robots_txt_found') else '✗ Missing'}
+- Sitemap.xml: {'✓ Found' if technical_seo.get('sitemap_found') else '✗ Missing'}
+- Meta Robots: {technical_seo.get('robots_directive', 'Not set')}
+- Noindex Status: {'⚠️ YES (Page is noindexed!)' if technical_seo.get('noindex') else '✓ No'}
+
+🔒 Security:
+- SSL/HTTPS: {'✓ Enabled' if technical_seo.get('ssl_enabled') else '❌ DISABLED (Critical!)'}
+
+📋 STRUCTURED DATA (NEW!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Schema Markup Present: {'✓ YES' if schema_analysis.get('has_schema') else '✗ NO'}
+- Schema Types Found: {', '.join(schema_analysis.get('schema_types', [])) or 'None'}
+- Total Schema Items: {schema_analysis.get('schema_count', 0)}
+- Validation Issues: {len(schema_analysis.get('validation_issues', []))} errors
+- Error Details: {'; '.join(schema_analysis.get('validation_issues', [])) or 'No errors'}
+- Recommendations: {'; '.join(schema_analysis.get('recommendations', [])) or 'None'}
+
+🔗 INTERNAL LINKING (NEW!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Total Links: {linking_analysis.get('total_links', 0)}
+- Internal Links: {linking_analysis.get('internal_count', 0)}
+- External Links: {linking_analysis.get('external_count', 0)}
+- Internal Link Ratio: {linking_analysis.get('internal_ratio', 0)}% (Target: 70-80%)
+- Nofollow Internal Links: {linking_analysis.get('nofollow_internal_count', 0)} (Should be 0)
+- Empty Anchor Text: {linking_analysis.get('empty_anchor_count', 0)} links (Should be 0)
+- Issues: {'; '.join(linking_analysis.get('recommendations', [])) or 'No issues'}
+
+📱 SOCIAL & RICH SNIPPETS
+- Open Graph Tags: {'✓ Present' if scraped_data.get('og_title') else '✗ Missing'}
+- OG Title: {scraped_data.get('og_title', 'Not set')}
+- OG Description: {scraped_data.get('og_description', 'Not set')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 CRITICAL INSTRUCTIONS:
-You MUST provide DETAILED, SPECIFIC recommendations following this format:
+You MUST provide DETAILED, SPECIFIC recommendations following this format.
 
 For each recommendation, include:
 1. ❌ Current State: [exact current value with numbers]
 2. ✅ Target State: [specific target with numbers]
 3. 📋 Example: '[ready-to-use example that can be directly implemented]'
 4. 📈 Impact: [measurable expected improvement like "+15-20% CTR" or "+50 monthly visitors"]
+
+Pay special attention to:
+- Canonical tag issues (if any are present)
+- Missing or invalid structured data
+- Internal linking problems (low ratio, nofollow on internal links, empty anchors)
+- SSL/HTTPS issues (critical for rankings)
+- Noindex pages (critical - page won't be indexed!)
 
 Provide analysis in this EXACT JSON format:
 
@@ -286,9 +334,9 @@ Provide analysis in this EXACT JSON format:
   "seo_issues": [
     {{
       "priority": "High|Medium|Low",
-      "category": "Title Tag|Meta Description|Content|Images|Technical SEO|Performance",
+      "category": "Title Tag|Meta Description|Content|Images|Technical SEO|Structured Data|Internal Linking|Canonical|Security",
       "issue": "<specific issue with current metric>",
-      "recommendation": "CURRENT: [exact current state with numbers]\\nTARGET: [specific target with numbers]\\nEXAMPLE: '[ready-to-use optimized text]'\\nIMPACT: [measurable improvement estimate]"
+      "recommendation": "CURRENT: [exact current state with numbers]\\\\nTARGET: [specific target with numbers]\\\\nEXAMPLE: '[ready-to-use optimized text]'\\\\nIMPACT: [measurable improvement estimate]"
     }}
   ],
   "keyword_strategy": {{
@@ -319,20 +367,20 @@ Provide analysis in this EXACT JSON format:
     {{
       "week": "Week 1",
       "priority": "High",
-      "action": "<specific action with exact steps: e.g., 'Reduce title from 74 to 58 chars, add primary keyword at start'>",
+      "action": "<specific action with exact steps: e.g., 'Fix canonical tag: Change from HTTP to HTTPS version'>",
       "expected_impact": "<measurable impact: e.g., '+15-20% CTR improvement, estimated +100 clicks/month'>"
     }},
     {{
       "week": "Week 2",
       "priority": "High|Medium",
-      "action": "<specific action>",
-      "expected_impact": "<measurable impact>"
+      "action": "<specific action: e.g., 'Add Schema.org Article markup with author, datePublished, and headline'>",
+      "expected_impact": "<measurable impact: e.g., 'Rich snippets in search results, +10-15% CTR'>"
     }},
     {{
       "week": "Week 3",
       "priority": "Medium",
-      "action": "<specific action>",
-      "expected_impact": "<measurable impact>"
+      "action": "<specific action: e.g., 'Increase internal linking from 45% to 75% by adding 8-10 contextual links'>",
+      "expected_impact": "<measurable impact: e.g., 'Better crawlability, improved PageRank distribution'>"
     }},
     {{
       "week": "Week 4",
@@ -349,7 +397,7 @@ REMEMBER - EVERY recommendation must include:
 ✓ Ready-to-use examples
 ✓ Measurable impact estimates
 
-Be professional, specific, and client-ready. Focus on high-impact optimizations."""
+Be professional, specific, and client-ready. Focus on high-impact optimizations, especially the new technical SEO findings (canonical, schema, internal links)."""
 
     try:
         openai_client = AsyncOpenAI(api_key=api_key)
@@ -359,7 +407,7 @@ Be professional, specific, and client-ready. Focus on high-impact optimizations.
             messages=[
                 {
                     "role": "system", 
-                    "content": "You are an expert SEO consultant providing professional, data-driven SEO audits with specific metrics, exact numbers, and actionable examples. Always respond with valid JSON only. EVERY recommendation MUST include: current state with numbers, target state with numbers, ready-to-use examples, and measurable impact estimates. Never give generic advice."
+                    "content": "You are an expert SEO consultant providing professional, data-driven SEO audits with specific metrics, exact numbers, and actionable examples. Always respond with valid JSON only. EVERY recommendation MUST include: current state with numbers, target state with numbers, ready-to-use examples, and measurable impact estimates. Never give generic advice. Pay special attention to technical SEO issues like canonical tags, structured data, and internal linking."
                 },
                 {"role": "user", "content": analysis_prompt}
             ],
@@ -388,11 +436,11 @@ Be professional, specific, and client-ready. Focus on high-impact optimizations.
         )
         
         return report
-
         
     except Exception as e:
         logger.error(f"Error in AI analysis: {str(e)}")
         raise HTTPException(status_code=500, detail=f"AI analysis failed: {str(e)}")
+
 
 
 # API Routes
