@@ -670,6 +670,95 @@ def check_performance(response_obj):
         "image_count": len(imgs),
     }
 
+def validate_schema_markup(soup, url):
+    """Validate and analyze structured data (JSON-LD, Microdata, RDFa)"""
+    
+    schema_data = {
+        "has_schema": False,
+        "schema_types": [],
+        "schema_count": 0,
+        "validation_issues": [],
+        "recommendations": [],
+        "json_ld_scripts": []
+    }
+    
+    # ========== JSON-LD Detection ==========
+    json_ld_scripts = soup.find_all('script', type='application/ld+json')
+    
+    if json_ld_scripts:
+        schema_data["has_schema"] = True
+        schema_data["schema_count"] = len(json_ld_scripts)
+        
+        for idx, script in enumerate(json_ld_scripts):
+            try:
+                # Parse JSON-LD
+                json_content = json.loads(script.string)
+                
+                # Extract @type
+                schema_type = None
+                if isinstance(json_content, dict):
+                    schema_type = json_content.get('@type')
+                    if isinstance(schema_type, list):
+                        schema_data["schema_types"].extend(schema_type)
+                    elif schema_type:
+                        schema_data["schema_types"].append(schema_type)
+                
+                # Store parsed data
+                schema_data["json_ld_scripts"].append({
+                    "index": idx + 1,
+                    "type": schema_type or "Unknown",
+                    "valid": True,
+                    "data": json_content
+                })
+                
+            except json.JSONDecodeError as e:
+                schema_data["validation_issues"].append(
+                    f"❌ JSON-LD #{idx + 1}: Invalid JSON syntax - {str(e)}"
+                )
+                schema_data["json_ld_scripts"].append({
+                    "index": idx + 1,
+                    "valid": False,
+                    "error": str(e)
+                })
+    
+    # ========== MICRODATA Detection ==========
+    microdata_items = soup.find_all(attrs={"itemtype": True})
+    if microdata_items:
+        schema_data["has_schema"] = True
+        schema_data["schema_count"] += len(microdata_items)
+        for item in microdata_items:
+            item_type = item.get('itemtype', '').split('/')[-1]
+            if item_type:
+                schema_data["schema_types"].append(f"{item_type} (Microdata)")
+    
+    # ========== Validation & Recommendations ==========
+    if not schema_data["has_schema"]:
+        schema_data["recommendations"].append(
+            "⚠️ No structured data found - Add Schema.org markup for better search visibility"
+        )
+    
+    # Check for common schema types based on page content
+    page_text = soup.get_text().lower()
+    
+    if not schema_data["schema_types"]:
+        # Suggest schema based on content
+        if any(word in page_text for word in ['product', 'price', 'buy', 'shop']):
+            schema_data["recommendations"].append("💡 Consider adding Product schema")
+        
+        if any(word in page_text for word in ['article', 'blog', 'posted', 'author']):
+            schema_data["recommendations"].append("💡 Consider adding Article schema")
+        
+        if any(word in page_text for word in ['review', 'rating', 'stars']):
+            schema_data["recommendations"].append("💡 Consider adding Review schema")
+        
+        if any(word in page_text for word in ['event', 'date', 'location', 'venue']):
+            schema_data["recommendations"].append("💡 Consider adding Event schema")
+    
+    # Remove duplicates from types
+    schema_data["schema_types"] = list(set(schema_data["schema_types"]))
+    
+    return schema_data
+
 
 # For Railway deployment
 if __name__ == "__main__":
