@@ -177,7 +177,7 @@ const ReportPage = () => {
 
             </div>
           </div>
-        </div>
+        
 
         {/* ========== TECHNICAL SEO SECTION (NEW) ========== */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="technical-seo-section">
