@@ -75,7 +75,19 @@ class SEOReport(BaseModel):
     h1_tags: List[str] = []
     h2_tags: List[str] = []
     word_count: int = 0
+    total_images: int = 0
+    images_without_alt: int = 0
+    canonical_url: Optional[str] = None
+    canonical_issues: List[str] = []
+    robots_txt_found: bool = False
+    sitemap_found: bool = False
+    ssl_enabled: bool = False
     
+    # Complete analysis data
+    technical_seo: Dict[str, Any] = {}
+    schema_analysis: Dict[str, Any] = {}
+    linking_analysis: Dict[str, Any] = {}
+    backlink_analysis: Dict[str, Any] = {}
     # Analysis Results
     seo_issues: List[SEOIssue] = []
     keyword_strategy: Optional[KeywordStrategy] = None
@@ -887,6 +899,18 @@ Be professional, specific, and client-ready. Focus on high-impact optimizations,
             h1_tags=scraped_data.get('h1_tags', []),
             h2_tags=scraped_data.get('h2_tags', []),
             word_count=scraped_data.get('word_count', 0),
+            total_images=scraped_data.get('total_images', 0),
+            images_without_alt=scraped_data.get('images_without_alt', 0),
+            canonical_url=technical_seo.get('canonical_url'),
+            canonical_issues=technical_seo.get('canonical_issues', []),
+            robots_txt_found=technical_seo.get('robots_txt_found', False),
+            sitemap_found=technical_seo.get('sitemap_found', False),
+            ssl_enabled=technical_seo.get('ssl_enabled', False),
+            
+            technical_seo=technical_seo,
+            schema_analysis=schema_analysis,
+            linking_analysis=linking_analysis,
+            backlink_analysis=backlink_analysis,
             seo_score=ai_analysis.get('seo_score'),
             analysis_summary=ai_analysis.get('analysis_summary'),
             seo_issues=[SEOIssue(**issue) for issue in ai_analysis.get('seo_issues', [])],
