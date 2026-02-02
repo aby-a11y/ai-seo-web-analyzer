@@ -709,6 +709,7 @@ async def analyze_with_ai(url: str, scraped_data: Dict[str, Any]) -> SEOReport:
     technical_seo = scraped_data.get('technical_seo', {})
     schema_analysis = scraped_data.get('schema_analysis', {})
     linking_analysis = scraped_data.get('linking_analysis', {})
+    backlink_analysis = scraped_data.get('backlink_analysis', {})
     
     # Create enhanced analysis prompt with ALL metrics
     analysis_prompt = f"""You are a senior SEO consultant analyzing a website. Provide a comprehensive, data-driven SEO audit with SPECIFIC METRICS and ACTIONABLE recommendations.
