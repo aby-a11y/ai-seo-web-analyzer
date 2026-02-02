@@ -4,7 +4,7 @@ import axios from 'axios';
 import { 
   ArrowLeft, ExternalLink, AlertTriangle, CheckCircle, Info, 
   TrendingUp, Target, Users, FileText, Calendar, Copy, Check,
-  Sparkles
+  Sparkles, Link2, Image as ImageIcon
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -151,7 +151,8 @@ const ReportPage = () => {
             </div>
           )}
 
-          <div className="grid md:grid-cols-3 gap-6 mt-6">
+          <div className="grid md:grid-cols-4 gap-6 mt-6">
+
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="text-sm text-gray-600 mb-1">Title Tag</p>
               <p className="font-medium text-gray-900">{report.title || 'Not found'}</p>
@@ -163,6 +164,17 @@ const ReportPage = () => {
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="text-sm text-gray-600 mb-1">H1 Tags</p>
               <p className="font-medium text-gray-900">{report.h1_tags.length} found</p>
+            </div>           
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Images (missing alt)</p>
+              <p className="font-medium text-gray-900">
+                <span className={report.images_without_alt > 0 ? 'text-red-600' : 'text-green-600'}>
+                  {report.images_without_alt ?? 0}
+                </span>
+                {' '}/{' '}{report.total_images ?? 0}
+              </p>
+            </div>
+
             </div>
           </div>
         </div>
@@ -179,7 +191,7 @@ const ReportPage = () => {
             <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-indigo-500 hover:shadow-md transition-shadow">
               <p className="text-sm text-gray-600 mb-2 font-medium">Canonical Tag</p>
               <div className="flex items-center space-x-2 mb-2">
-                {report.canonical_url ? (
+{report.canonical_url ? (
                   <>
                     <CheckCircle className="w-5 h-5 text-green-600" />
                     <span className="font-bold text-green-700">Present</span>
@@ -201,7 +213,19 @@ const ReportPage = () => {
                   Add canonical tag to avoid duplicate content issues
                 </p>
               )}
+              {/* Canonical Issues */}
+              {Array.isArray(report.canonical_issues) && report.canonical_issues.length > 0 && (
+                <div className="mt-3 text-xs text-red-700 bg-red-50 p-2 rounded space-y-1">
+                  {report.canonical_issues.slice(0, 3).map((issue, idx) => (
+                    <div key={idx} className="flex items-start space-x-1">
+                      <span>•</span>
+                      <span>{issue}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+
 
             {/* SSL Certificate */}
             <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-green-500 hover:shadow-md transition-shadow">
@@ -220,7 +244,8 @@ const ReportPage = () => {
                 )}
               </div>
               <p className="text-xs text-gray-600 mt-2">
-                {report.ssl_enabled ? 'Secure HTTPS connection ✓' : 'HTTP only - migrate to HTTPS'}
+                {(report.technical_seo?.ssl_enabled ?? report.ssl_enabled) ? 'Secure HTTPS connection ✓' : 'HTTP only - migrate to HTTPS'}
+
               </p>
             </div>
 
@@ -268,6 +293,75 @@ const ReportPage = () => {
           </div>
         </div>
         {/* ========== END TECHNICAL SEO SECTION ========== */}
+        {/* ========== INTERNAL LINKING SECTION (NEW) ========== */}
+        {report.linking_analysis && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="internal-linking-section">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2 mb-6">
+              <Link2 className="w-7 h-7 text-indigo-600" />
+              <span>Internal Linking Analysis</span>
+            </h2>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-5 rounded-lg border-l-4 border-indigo-500">
+                <p className="text-sm text-gray-700 mb-1 font-medium">Total Links</p>
+                <p className="text-3xl font-bold text-indigo-900">{report.linking_analysis.total_links ?? 0}</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-lg border-l-4 border-green-500">
+                <p className="text-sm text-gray-700 mb-1 font-medium">Internal Links</p>
+                <p className="text-3xl font-bold text-green-900">{report.linking_analysis.internal_count ?? 0}</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-lg border-l-4 border-blue-500">
+                <p className="text-sm text-gray-700 mb-1 font-medium">External Links</p>
+                <p className="text-3xl font-bold text-blue-900">{report.linking_analysis.external_count ?? 0}</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-lg border-l-4 border-purple-500">
+                <p className="text-sm text-gray-700 mb-1 font-medium">Internal Ratio</p>
+                <p className="text-3xl font-bold text-purple-900">{report.linking_analysis.internal_ratio ?? 0}%</p>
+                <p className="text-xs text-gray-600 mt-1">Target: 70-80%</p>
+              </div>
+            </div>
+
+            {/* Linking Issues/Recommendations */}
+            {Array.isArray(report.linking_analysis.recommendations) && report.linking_analysis.recommendations.length > 0 && (
+              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
+                <p className="text-sm font-semibold text-yellow-900 mb-2">Recommendations:</p>
+                <ul className="space-y-1">
+                  {report.linking_analysis.recommendations.map((rec, idx) => (
+                    <li key={idx} className="text-sm text-yellow-800 flex items-start space-x-2">
+                      <span className="mt-1">•</span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Additional Metrics */}
+            {(report.linking_analysis.nofollow_internal_count > 0 || report.linking_analysis.empty_anchor_count > 0) && (
+              <div className="grid md:grid-cols-2 gap-4 mt-4">
+                {report.linking_analysis.nofollow_internal_count > 0 && (
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <p className="text-sm text-gray-700 mb-1">Nofollow Internal Links</p>
+                    <p className="text-2xl font-bold text-red-700">{report.linking_analysis.nofollow_internal_count}</p>
+                    <p className="text-xs text-red-600 mt-1">Should be 0 for better SEO</p>
+                  </div>
+                )}
+                
+                {report.linking_analysis.empty_anchor_count > 0 && (
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <p className="text-sm text-gray-700 mb-1">Empty Anchor Text</p>
+                    <p className="text-2xl font-bold text-red-700">{report.linking_analysis.empty_anchor_count}</p>
+                    <p className="text-xs text-red-600 mt-1">Add descriptive anchor text</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        {/* ========== END INTERNAL LINKING SECTION ========== */}
 
         {/* SEO Issues */}
         {report.seo_issues && report.seo_issues.length > 0 && (
