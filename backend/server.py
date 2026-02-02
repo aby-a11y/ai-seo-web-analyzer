@@ -462,7 +462,120 @@ def analyze_internal_links(soup, base_url):
         "empty_anchor_count": empty_anchors,
         "recommendations": recommendations
     }
+    # ========== NEW: BACKLINK ANALYZER ==========
+async def analyze_backlinks(url: str, soup: BeautifulSoup) -> Dict[str, Any]:
+    """Analyze backlinks, external links, and referrer potential"""
+    from urllib.parse import urlparse, urljoin
     
+    parsed_url = urlparse(url)
+    base_domain = parsed_url.netloc
+    
+    backlink_data = {
+        "total_external_links": 0,
+        "dofollow_count": 0,
+        "nofollow_count": 0,
+        "unique_domains": 0,
+        "top_linked_domains": [],
+        "link_quality_score": 0,
+        "recommendations": [],
+        "external_link_details": []
+    }
+    
+    all_links = soup.find_all('a', href=True)
+    external_links = []
+    domain_count = {}
+    
+    for link in all_links:
+        href = link.get('href', '').strip()
+        
+        if not href or href.startswith('#') or href.startswith('javascript:') or href.startswith('mailto:'):
+            continue
+        
+        absolute_url = urljoin(url, href)
+        parsed_link = urlparse(absolute_url)
+        
+        # Only external links
+        if parsed_link.netloc and parsed_link.netloc != base_domain:
+            is_nofollow = 'nofollow' in link.get('rel', [])
+            
+            link_info = {
+                "url": absolute_url,
+                "domain": parsed_link.netloc,
+                "anchor_text": link.get_text().strip()[:100],
+                "is_dofollow": not is_nofollow,
+                "is_nofollow": is_nofollow,
+                "opens_new_tab": link.get('target') == '_blank'
+            }
+            
+            external_links.append(link_info)
+            domain = parsed_link.netloc
+            domain_count[domain] = domain_count.get(domain, 0) + 1
+    
+    # Calculate statistics
+    backlink_data["total_external_links"] = len(external_links)
+    backlink_data["dofollow_count"] = sum(1 for link in external_links if link['is_dofollow'])
+    backlink_data["nofollow_count"] = sum(1 for link in external_links if link['is_nofollow'])
+    backlink_data["unique_domains"] = len(domain_count)
+    
+    # Top linked domains
+    sorted_domains = sorted(domain_count.items(), key=lambda x: x[1], reverse=True)
+    backlink_data["top_linked_domains"] = [
+        {"domain": domain, "link_count": count, "estimated_authority": estimate_domain_authority(domain)}
+        for domain, count in sorted_domains[:10]
+    ]
+    
+    backlink_data["external_link_details"] = external_links[:20]
+    
+    # Calculate link quality score (0-100)
+    quality_score = 0
+    if backlink_data["total_external_links"] > 0:
+        dofollow_ratio = backlink_data["dofollow_count"] / backlink_data["total_external_links"]
+        quality_score += dofollow_ratio * 40
+    
+    if backlink_data["unique_domains"] >= 5:
+        quality_score += 30
+    elif backlink_data["unique_domains"] >= 3:
+        quality_score += 20
+    
+    high_authority = ['wikipedia.org', 'github.com', 'stackoverflow.com', 'medium.com', 'linkedin.com']
+    authority_links = sum(1 for link in external_links if any(auth in link['domain'] for auth in high_authority))
+    quality_score += min(authority_links * 5, 30)
+    
+    backlink_data["link_quality_score"] = min(round(quality_score), 100)
+    
+    # Recommendations
+    if backlink_data["total_external_links"] == 0:
+        backlink_data["recommendations"].append("⚠️ No external links - Add 3-5 quality outbound links")
+    
+    if backlink_data["unique_domains"] < 3:
+        backlink_data["recommendations"].append("💡 Link to more diverse sources (5-10 domains)")
+    
+    if backlink_data["link_quality_score"] < 50:
+        backlink_data["recommendations"].append("📈 Add more dofollow links to high-authority domains")
+    
+    backlink_data["recommendations"].append("💡 Reach out to linked domains for reciprocal backlinks")
+    
+    return backlink_data
+
+
+def estimate_domain_authority(domain: str) -> str:
+    """Estimate domain authority"""
+    high_authority = [
+        'wikipedia.org', 'github.com', 'stackoverflow.com', 'medium.com', 
+        'linkedin.com', 'forbes.com', 'nytimes.com'
+    ]
+    
+    if any(auth in domain.lower() for auth in high_authority):
+        return "High (DA 80-100)"
+    
+    if domain.endswith('.edu') or domain.endswith('.gov') or domain.endswith('.org'):
+        return "Medium-High (DA 60-80)"
+    
+    if domain.endswith('.com') or domain.endswith('.net'):
+        return "Medium (DA 40-60)"
+    
+    return "Unknown"
+
 
 # Web Scraping Function
 async def scrape_website(url: str) -> Dict[str, Any]:
@@ -484,7 +597,8 @@ async def scrape_website(url: str) -> Dict[str, Any]:
         performance = check_performance(response)
         schema_analysis = validate_schema_markup(soup, str(url))
         linking_analysis = analyze_internal_links(soup, str(url))
-       
+        backlink_analysis = await analyze_backlinks(str(url), soup)  # NEW!
+
         # Extract title
         title = soup.find('title')
         title_text = title.get_text().strip() if title else None
@@ -557,6 +671,9 @@ async def scrape_website(url: str) -> Dict[str, Any]:
             'linking_analysis': linking_analysis,
             'total_links': linking_analysis['total_links'],
             'internal_links_count': linking_analysis['internal_count'],
+             'backlink_analysis': backlink_analysis, 
+             'external_links_count': backlink_analysis['total_external_links'],
+             'link_quality_score': backlink_analysis['link_quality_score'],
         }
         
     except Exception as e:
@@ -874,6 +991,29 @@ async def delete_seo_report(report_id: str):
         raise HTTPException(status_code=404, detail="Report not found")
     
     return {"message": "Report deleted successfully"}
+@api_router.post("/seo/backlinks")
+async def analyze_backlinks_endpoint(request: SEOAnalysisRequest):
+    """Dedicated endpoint for backlink analysis"""
+    url = str(request.url)
+    logger.info(f"Starting backlink analysis for: {url}")
+    
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
+            response = await client.get(url, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            })
+            response.raise_for_status()
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        backlink_data = await analyze_backlinks(url, soup)
+        
+        return {
+            "url": url,
+            "analyzed_at": datetime.now(timezone.utc).isoformat(),
+            "backlink_analysis": backlink_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed: {str(e)}")
 
 
 # Include the router in the main app
