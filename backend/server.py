@@ -115,6 +115,19 @@ class SEOReportResponse(BaseModel):
     h1_tags: List[str] = []
     h2_tags: List[str] = []
     word_count: int = 0
+    total_images: int = 0
+    images_without_alt: int = 0
+    canonical_url: Optional[str] = None
+    canonical_issues: List[str] = []
+    robots_txt_found: bool = False
+    sitemap_found: bool = False
+    ssl_enabled: bool = False
+    
+    technical_seo: Dict[str, Any] = {}
+    schema_analysis: Dict[str, Any] = {}
+    linking_analysis: Dict[str, Any] = {}
+    backlink_analysis: Dict[str, Any] = {}
+    
     seo_issues: List[SEOIssue] = []
     keyword_strategy: Optional[KeywordStrategy] = None
     competitor_analysis: Dict[str, Any] = {}
