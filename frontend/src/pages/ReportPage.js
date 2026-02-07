@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
-  ArrowLeft, CheckCircle, XCircle, AlertTriangle, Info,
-  FileText, Code, Link as LinkIcon, Zap, Globe, Users
+  ArrowLeft, ExternalLink, AlertTriangle, CheckCircle, Info, 
+  TrendingUp, Target, Users, FileText, Calendar, Copy, Check,
+  Sparkles, Link2, Image as ImageIcon
 } from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const ReportPage = () => {
@@ -14,86 +15,55 @@ const ReportPage = () => {
   const navigate = useNavigate();
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activeSection, setActiveSection] = useState('basic');
+  const [error, setError] = useState('');
+  const [copiedSection, setCopiedSection] = useState('');
 
   useEffect(() => {
     fetchReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportId]);
 
   const fetchReport = async () => {
     try {
-      console.log('Fetching report:', reportId);
       const response = await axios.get(`${API}/seo/reports/${reportId}`);
-      console.log('Report data:', response.data);
       setReport(response.data);
       setLoading(false);
     } catch (err) {
-      console.error('Failed to load report:', err);
-      setError(err.response?.data?.detail || 'Failed to load report');
+      setError('Failed to load report');
       setLoading(false);
     }
   };
 
-  // Helper function to safely get nested values
-  const get = (obj, path, defaultValue = null) => {
-    const keys = path.split('.');
-    let result = obj;
-    for (const key of keys) {
-      if (result?.[key] === undefined) return defaultValue;
-      result = result[key];
+  const copyToClipboard = (text, section) => {
+    navigator.clipboard.writeText(text);
+    setCopiedSection(section);
+    setTimeout(() => setCopiedSection(''), 2000);
+  };
+
+  const getPriorityColor = (priority) => {
+    switch(priority.toLowerCase()) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-    return result ?? defaultValue;
   };
 
-  const ScoreCircle = ({ score, label }) => {
-    const safeScore = score || 0;
-    const getColor = (score) => {
-      if (score >= 80) return 'text-green-600 border-green-600';
-      if (score >= 60) return 'text-yellow-600 border-yellow-600';
-      return 'text-red-600 border-red-600';
-    };
-
-    return (
-      <div className="flex flex-col items-center">
-        <div className={`w-24 h-24 rounded-full border-8 ${getColor(safeScore)} flex items-center justify-center`}>
-          <span className="text-3xl font-bold">{safeScore}</span>
-        </div>
-        <p className="mt-2 text-gray-600 font-medium">{label}</p>
-      </div>
-    );
+  const getPriorityIcon = (priority) => {
+    switch(priority.toLowerCase()) {
+      case 'high': return <AlertTriangle className="w-5 h-5" />;
+      case 'medium': return <Info className="w-5 h-5" />;
+      case 'low': return <CheckCircle className="w-5 h-5" />;
+      default: return <Info className="w-5 h-5" />;
+    }
   };
-
-  const StatusIcon = ({ status }) => {
-    if (status === 'pass') return <CheckCircle className="w-5 h-5 text-green-600" />;
-    if (status === 'fail') return <XCircle className="w-5 h-5 text-red-600" />;
-    if (status === 'warning') return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
-    return <Info className="w-5 h-5 text-gray-400" />;
-  };
-
-  const CheckItem = ({ label, status, value, recommendation }) => (
-    <div className="border-b last:border-b-0 py-4">
-      <div className="flex items-start space-x-3">
-        <StatusIcon status={status} />
-        <div className="flex-1">
-          <h4 className="font-semibold text-gray-900">{label}</h4>
-          {value && <p className="text-sm text-gray-600 mt-1">{value}</p>}
-          {recommendation && (
-            <div className="mt-2 p-3 bg-blue-50 border-l-4 border-blue-600 rounded-r text-sm text-gray-700">
-              💡 {recommendation}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading report...</p>
+          <p className="text-gray-600">Loading report...</p>
         </div>
       </div>
     );
@@ -101,13 +71,12 @@ const ReportPage = () => {
 
   if (error || !report) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <XCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
-          <p className="text-red-600 text-lg mb-4">{error || 'Report not found'}</p>
+          <p className="text-red-600 mb-4">{error || 'Report not found'}</p>
           <button
             onClick={() => navigate('/')}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold"
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
           >
             Go Home
           </button>
@@ -116,401 +85,617 @@ const ReportPage = () => {
     );
   }
 
-  // Safely extract data
-  const scraped = report.scraped_data || {};
-  const onpage = scraped.on_page_seo || {};
-  const technical = scraped.technical_seo || {};
-  const content = scraped.content_analysis || {};
-  const internal = scraped.internal_linking || {};
-  const backlinks = scraped.backlinks || {};
-
-  // Safe getters
-  const title = onpage.title || '';
-  const titleLength = title.length;
-  const metaDesc = onpage.meta_description || '';
-  const metaLength = metaDesc.length;
-  const h1Tags = onpage.h1_tags || [];
-  const h2Tags = onpage.h2_tags || [];
-  const h3Tags = onpage.h3_tags || [];
-  const wordCount = content.word_count || 0;
-  const totalImages = content.total_images || 0;
-  const imagesWithoutAlt = content.images_without_alt || 0;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header */}
       <div className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center space-x-2 text-gray-600 hover:text-indigo-600 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Back to Home</span>
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center space-x-2 text-gray-600 hover:text-indigo-600 transition-colors"
+              data-testid="back-button"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Back to Home</span>
+            </button>
+            <div className="flex items-center space-x-2">
+              <Sparkles className="w-6 h-6 text-indigo-600" />
+              <span className="text-xl font-bold gradient-text">SEO Genius</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <div className="mb-4 md:mb-0">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">SEO Audit Report</h1>
+        {/* Website Overview */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="website-overview">
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex-1">
+              <div className="flex items-center space-x-3 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900">SEO Report</h1>
+                {report.seo_score && (
+                  <div className={`px-4 py-2 rounded-full font-bold text-2xl ${
+                    report.seo_score >= 80 ? 'bg-green-100 text-green-800' :
+                    report.seo_score >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`} data-testid="seo-score">
+                    {report.seo_score}/100
+                  </div>
+                )}
+              </div>
               <a 
                 href={report.url} 
                 target="_blank" 
-                rel="noopener noreferrer" 
-                className="text-indigo-600 hover:underline break-all"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-700 text-lg"
               >
-                {report.url}
+                <span>{report.url}</span>
+                <ExternalLink className="w-4 h-4" />
               </a>
+              <p className="text-gray-500 mt-2">
+                Analyzed on {new Date(report.analyzed_at).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
             </div>
-            <ScoreCircle score={report.seo_score} label="Overall Score" />
           </div>
 
-          {/* Summary */}
-          {report.ai_report?.summary && (
-            <div className="bg-indigo-50 border-l-4 border-indigo-600 p-4 rounded-r-lg">
-              <p className="text-gray-800">{report.ai_report.summary}</p>
+          {report.analysis_summary && (
+            <div className="bg-indigo-50 border-l-4 border-indigo-600 p-6 rounded-r-lg">
+              <p className="text-gray-800 leading-relaxed">{report.analysis_summary}</p>
             </div>
           )}
-        </div>
 
-        {/* Navigation Tabs */}
-        <div className="bg-white rounded-2xl shadow-lg mb-8 overflow-hidden">
-          <div className="flex overflow-x-auto">
-            {[
-              { id: 'basic', label: 'Basic SEO', icon: FileText },
-              { id: 'advanced', label: 'Advanced', icon: Code },
-              { id: 'keywords', label: 'Keywords', icon: LinkIcon },
-              { id: 'performance', label: 'Performance', icon: Zap },
-              { id: 'local', label: 'Local SEO', icon: Globe },
-              { id: 'social', label: 'Social', icon: Users },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveSection(tab.id)}
-                  className={`flex items-center space-x-2 px-6 py-4 font-semibold whitespace-nowrap transition-all ${
-                    activeSection === tab.id
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
+          <div className="grid md:grid-cols-4 gap-6 mt-6">
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Title Tag</p>
+              <p className="font-medium text-gray-900">{report.title || 'Not found'}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Word Count</p>
+              <p className="font-medium text-gray-900">{report.word_count.toLocaleString()} words</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">H1 Tags</p>
+              <p className="font-medium text-gray-900">{report.h1_tags.length} found</p>
+            </div>           
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">Images (missing alt)</p>
+              <p className="font-medium text-gray-900">
+                <span className={report.images_without_alt > 0 ? 'text-red-600' : 'text-green-600'}>
+                  {report.images_without_alt ?? 0}
+                </span>
+                {' '}/{' '}{report.total_images ?? 0}
+              </p>
+            </div>
+
+            </div>
           </div>
-        </div>
+        
 
-        {/* Content */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        {/* ========== TECHNICAL SEO SECTION (NEW) ========== */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="technical-seo-section">
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2 mb-6">
+            <CheckCircle className="w-7 h-7 text-indigo-600" />
+            <span>Technical SEO</span>
+          </h2>
           
-          {/* BASIC SEO */}
-          {activeSection === 'basic' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <FileText className="w-6 h-6 mr-3 text-indigo-600" />
-                Basic SEO
-              </h2>
-
-              <CheckItem
-                label="Meta Title"
-                status={titleLength >= 50 && titleLength <= 60 ? 'pass' : titleLength > 0 ? 'warning' : 'fail'}
-                value={title ? `"${title}" (${titleLength} chars)` : 'Missing'}
-                recommendation={
-                  !title ? 'Add a title tag (50-60 characters recommended)' :
-                  titleLength < 50 ? 'Title too short. Aim for 50-60 characters.' :
-                  titleLength > 60 ? 'Title too long. Keep it under 60 characters.' : null
-                }
-              />
-
-              <CheckItem
-                label="Meta Description"
-                status={metaLength >= 150 && metaLength <= 160 ? 'pass' : metaLength > 0 ? 'warning' : 'fail'}
-                value={metaDesc ? `"${metaDesc.substring(0, 100)}..." (${metaLength} chars)` : 'Missing'}
-                recommendation={
-                  !metaDesc ? 'Add a meta description (150-160 characters)' :
-                  metaLength < 150 ? 'Description too short. Aim for 150-160 characters.' :
-                  metaLength > 160 ? 'Description too long. Keep it under 160 characters.' : null
-                }
-              />
-
-              {/* SERP Preview */}
-              <div className="border-b py-4">
-                <h4 className="font-semibold text-gray-900 mb-3">SERP Snippet Preview</h4>
-                <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
-                  <div className="text-blue-600 text-lg font-medium mb-1">
-                    {title || 'Your Page Title Here (50-60 chars)'}
-                  </div>
-                  <div className="text-green-700 text-sm mb-2">
-                    {report.url}
-                  </div>
-                  <div className="text-gray-700 text-sm">
-                    {metaDesc || 'Your meta description will appear here (150-160 characters)...'}
-                  </div>
-                </div>
-              </div>
-
-              <CheckItem
-                label="H1 Header Tag"
-                status={h1Tags.length === 1 ? 'pass' : h1Tags.length > 1 ? 'warning' : 'fail'}
-                value={h1Tags.length > 0 ? `${h1Tags.length} H1(s): "${h1Tags.join('", "')}"` : 'No H1 found'}
-                recommendation={
-                  h1Tags.length === 0 ? 'Add exactly one H1 tag to your page' :
-                  h1Tags.length > 1 ? 'Use only one H1 tag per page for better SEO' : null
-                }
-              />
-
-              <CheckItem
-                label="H2-H6 Header Tags"
-                status={h2Tags.length > 0 ? 'pass' : 'warning'}
-                value={`H2: ${h2Tags.length}, H3: ${h3Tags.length}`}
-                recommendation={h2Tags.length === 0 ? 'Add H2 subheadings to structure your content' : null}
-              />
-
-              <CheckItem
-                label="Content Length"
-                status={wordCount >= 300 ? 'pass' : 'warning'}
-                value={`${wordCount} words`}
-                recommendation={
-                  wordCount < 300 ? 'Add more content. Aim for at least 300-500 words.' :
-                  wordCount < 1000 ? 'Good start! Consider expanding to 1000+ words for competitive keywords.' : null
-                }
-              />
-            </div>
-          )}
-
-          {/* ADVANCED SEO */}
-          {activeSection === 'advanced' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <Code className="w-6 h-6 mr-3 text-indigo-600" />
-                Advanced SEO
-              </h2>
-
-              <CheckItem
-                label="Canonical Tag"
-                status={technical.canonical_tag ? 'pass' : 'warning'}
-                value={technical.canonical_tag || 'Not found'}
-                recommendation={!technical.canonical_tag ? 'Add a canonical tag to avoid duplicate content' : null}
-              />
-
-              <CheckItem
-                label="Image Alt Attributes"
-                status={imagesWithoutAlt === 0 ? 'pass' : imagesWithoutAlt <= 3 ? 'warning' : 'fail'}
-                value={`${imagesWithoutAlt} images without alt text (out of ${totalImages})`}
-                recommendation={imagesWithoutAlt > 0 ? `Add alt text to ${imagesWithoutAlt} images` : null}
-              />
-
-              <CheckItem
-                label="Robots.txt"
-                status={technical.robots_txt_exists ? 'pass' : 'warning'}
-                value={technical.robots_txt_exists ? 'Found' : 'Not found'}
-                recommendation={!technical.robots_txt_exists ? 'Create a robots.txt file' : null}
-              />
-
-              <CheckItem
-                label="SSL/HTTPS"
-                status={technical.https ? 'pass' : 'fail'}
-                value={technical.https ? '✓ Enabled' : '✗ Not enabled'}
-                recommendation={!technical.https ? 'Enable HTTPS for security and better rankings' : null}
-              />
-
-              <CheckItem
-                label="XML Sitemap"
-                status={technical.sitemap_exists ? 'pass' : 'warning'}
-                value={technical.sitemap_url || 'Not found'}
-                recommendation={!technical.sitemap_exists ? 'Create and submit an XML sitemap' : null}
-              />
-
-              <CheckItem
-                label="Schema.org Structured Data"
-                status={technical.schema_markup ? 'pass' : 'warning'}
-                value={technical.schema_types?.join(', ') || 'Not found'}
-                recommendation={!technical.schema_markup ? 'Add structured data (Schema.org) markup' : null}
-              />
-
-              <CheckItem
-                label="Analytics"
-                status={technical.has_analytics ? 'pass' : 'warning'}
-                value={technical.analytics_found?.join(', ') || 'Not detected'}
-                recommendation={!technical.has_analytics ? 'Install Google Analytics or similar' : null}
-              />
-            </div>
-          )}
-
-          {/* KEYWORDS & BACKLINKS */}
-          {activeSection === 'keywords' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <LinkIcon className="w-6 h-6 mr-3 text-indigo-600" />
-                Keywords & Backlinks
-              </h2>
-
-              <div className="border-b py-4">
-                <h4 className="font-semibold text-gray-900 mb-3">Primary Keywords</h4>
-                {content.keywords?.primary && content.keywords.primary.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {content.keywords.primary.slice(0, 10).map((kw, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
-                        {kw.keyword} ({kw.count}×)
-                      </span>
-                    ))}
-                  </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Canonical URL */}
+            <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-indigo-500 hover:shadow-md transition-shadow">
+              <p className="text-sm text-gray-600 mb-2 font-medium">Canonical Tag</p>
+              <div className="flex items-center space-x-2 mb-2">
+{report.canonical_url ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="font-bold text-green-700">Present</span>
+                  </>
                 ) : (
-                  <p className="text-gray-600">No keywords identified</p>
+                  <>
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <span className="font-bold text-red-700">Missing</span>
+                  </>
                 )}
               </div>
-
-              <CheckItem
-                label="Backlinks Summary"
-                status={backlinks.total_backlinks > 10 ? 'pass' : 'warning'}
-                value={`${backlinks.total_backlinks || 0} backlinks from ${backlinks.unique_domains || 0} domains`}
-                recommendation={backlinks.total_backlinks < 10 ? 'Build more quality backlinks' : null}
-              />
-
-              <CheckItem
-                label="Internal Links"
-                status={internal.total_internal_links > 5 ? 'pass' : 'warning'}
-                value={`${internal.total_internal_links || 0} internal links found`}
-                recommendation={internal.total_internal_links < 5 ? 'Add more internal links to improve site structure' : null}
-              />
+              {report.canonical_url && (
+                <p className="text-xs text-gray-600 break-all mt-2 bg-white p-2 rounded">
+                  {report.canonical_url}
+                </p>
+              )}
+              {!report.canonical_url && (
+                <p className="text-xs text-gray-600 mt-2">
+                  Add canonical tag to avoid duplicate content issues
+                </p>
+              )}
+              {/* Canonical Issues */}
+              {Array.isArray(report.canonical_issues) && report.canonical_issues.length > 0 && (
+                <div className="mt-3 text-xs text-red-700 bg-red-50 p-2 rounded space-y-1">
+                  {report.canonical_issues.slice(0, 3).map((issue, idx) => (
+                    <div key={idx} className="flex items-start space-x-1">
+                      <span>•</span>
+                      <span>{issue}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
 
-          {/* PERFORMANCE */}
-          {activeSection === 'performance' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <Zap className="w-6 h-6 mr-3 text-indigo-600" />
-                Performance
-              </h2>
 
-              <CheckItem
-                label="Mobile Responsive"
-                status={technical.viewport_meta ? 'pass' : 'fail'}
-                value={technical.viewport_meta ? 'Viewport meta tag found' : 'No viewport meta'}
-                recommendation={!technical.viewport_meta ? 'Add viewport meta tag for mobile' : null}
-              />
+            {/* SSL Certificate */}
+            <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-green-500 hover:shadow-md transition-shadow">
+              <p className="text-sm text-gray-600 mb-2 font-medium">SSL Certificate</p>
+              <div className="flex items-center space-x-2 mb-2">
+                {report.ssl_enabled ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="font-bold text-green-700">Enabled</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <span className="font-bold text-red-700">Disabled</span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                {(report.technical_seo?.ssl_enabled ?? report.ssl_enabled) ? 'Secure HTTPS connection ✓' : 'HTTP only - migrate to HTTPS'}
 
-              <CheckItem
-                label="Page Load Time"
-                status={technical.load_time < 3 ? 'pass' : 'warning'}
-                value={`${technical.load_time || 'N/A'}s`}
-                recommendation={technical.load_time > 3 ? 'Optimize for faster loading (compress images, minify CSS/JS)' : null}
-              />
-
-              <CheckItem
-                label="Page Size"
-                status={technical.page_size_mb < 3 ? 'pass' : 'warning'}
-                value={`${technical.page_size_mb || 'N/A'} MB`}
-                recommendation={technical.page_size_mb > 3 ? 'Reduce page size (compress images, remove unused code)' : null}
-              />
+              </p>
             </div>
-          )}
 
-          {/* LOCAL SEO */}
-          {activeSection === 'local' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <Globe className="w-6 h-6 mr-3 text-indigo-600" />
-                Local SEO
-              </h2>
-
-              <CheckItem
-                label="Contact Information"
-                status={technical.has_contact_info ? 'pass' : 'warning'}
-                value={technical.has_contact_info ? 'Found on page' : 'Not found'}
-                recommendation={!technical.has_contact_info ? 'Display business address and phone prominently' : null}
-              />
-
-              <CheckItem
-                label="Local Business Schema"
-                status={technical.local_business_schema ? 'pass' : 'warning'}
-                value={technical.local_business_schema ? 'Present' : 'Not found'}
-                recommendation={!technical.local_business_schema ? 'Add LocalBusiness schema markup' : null}
-              />
-
-              <CheckItem
-                label="Google Business Profile"
-                status="info"
-                value="Verify manually"
-                recommendation="Claim and optimize your Google Business Profile"
-              />
+            {/* Robots.txt */}
+            <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-purple-500 hover:shadow-md transition-shadow">
+              <p className="text-sm text-gray-600 mb-2 font-medium">Robots.txt</p>
+              <div className="flex items-center space-x-2 mb-2">
+                {report.robots_txt_found ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="font-bold text-green-700">Found</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                    <span className="font-bold text-yellow-700">Not Found</span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                {report.robots_txt_found ? 'Crawl instructions present' : 'Add robots.txt for better indexing'}
+              </p>
             </div>
-          )}
 
-          {/* SOCIAL */}
-          {activeSection === 'social' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <Users className="w-6 h-6 mr-3 text-indigo-600" />
-                Social Media
-              </h2>
-
-              <CheckItem
-                label="Facebook"
-                status={technical.social?.facebook ? 'pass' : 'warning'}
-                value={technical.social?.facebook || 'Not linked'}
-                recommendation={!technical.social?.facebook ? 'Link your Facebook page' : null}
-              />
-
-              <CheckItem
-                label="Twitter/X"
-                status={technical.social?.twitter ? 'pass' : 'warning'}
-                value={technical.social?.twitter || 'Not linked'}
-                recommendation={!technical.social?.twitter ? 'Link your Twitter/X account' : null}
-              />
-
-              <CheckItem
-                label="Instagram"
-                status={technical.social?.instagram ? 'pass' : 'warning'}
-                value={technical.social?.instagram || 'Not linked'}
-                recommendation={!technical.social?.instagram ? 'Link your Instagram profile' : null}
-              />
-
-              <CheckItem
-                label="LinkedIn"
-                status={technical.social?.linkedin ? 'pass' : 'warning'}
-                value={technical.social?.linkedin || 'Not linked'}
-                recommendation={!technical.social?.linkedin ? 'Link your LinkedIn page' : null}
-              />
-
-              <CheckItem
-                label="YouTube"
-                status={technical.social?.youtube ? 'pass' : 'warning'}
-                value={technical.social?.youtube || 'Not linked'}
-                recommendation={!technical.social?.youtube ? 'Link your YouTube channel' : null}
-              />
+            {/* Sitemap */}
+            <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-blue-500 hover:shadow-md transition-shadow">
+              <p className="text-sm text-gray-600 mb-2 font-medium">XML Sitemap</p>
+              <div className="flex items-center space-x-2 mb-2">
+                {report.sitemap_found ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="font-bold text-green-700">Found</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                    <span className="font-bold text-yellow-700">Not Found</span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                {report.sitemap_found ? 'Sitemap.xml accessible' : 'Create sitemap.xml for better crawling'}
+              </p>
             </div>
-          )}
+          </div>
         </div>
+        {/* ========== END TECHNICAL SEO SECTION ========== */}
+        {/* ========== INTERNAL LINKING SECTION (NEW) ========== */}
+        {report.linking_analysis && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="internal-linking-section">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2 mb-6">
+              <Link2 className="w-7 h-7 text-indigo-600" />
+              <span>Internal Linking Analysis</span>
+            </h2>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-5 rounded-lg border-l-4 border-indigo-500">
+                <p className="text-sm text-gray-700 mb-1 font-medium">Total Links</p>
+                <p className="text-3xl font-bold text-indigo-900">{report.linking_analysis.total_links ?? 0}</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-lg border-l-4 border-green-500">
+                <p className="text-sm text-gray-700 mb-1 font-medium">Internal Links</p>
+                <p className="text-3xl font-bold text-green-900">{report.linking_analysis.internal_count ?? 0}</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-lg border-l-4 border-blue-500">
+                <p className="text-sm text-gray-700 mb-1 font-medium">External Links</p>
+                <p className="text-3xl font-bold text-blue-900">{report.linking_analysis.external_count ?? 0}</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-lg border-l-4 border-purple-500">
+                <p className="text-sm text-gray-700 mb-1 font-medium">Internal Ratio</p>
+                <p className="text-3xl font-bold text-purple-900">{report.linking_analysis.internal_ratio ?? 0}%</p>
+                <p className="text-xs text-gray-600 mt-1">Target: 70-80%</p>
+              </div>
+            </div>
 
-        {/* AI Recommendations */}
-        {report.ai_report?.recommendations && (
-          <div className="bg-white rounded-2xl shadow-lg p-8 mt-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">AI Recommendations</h2>
-            <div className="prose prose-indigo max-w-none">
-              <div className="whitespace-pre-line text-gray-700 leading-relaxed">
-                {report.ai_report.recommendations}
+            {/* Linking Issues/Recommendations */}
+            {Array.isArray(report.linking_analysis.recommendations) && report.linking_analysis.recommendations.length > 0 && (
+              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
+                <p className="text-sm font-semibold text-yellow-900 mb-2">Recommendations:</p>
+                <ul className="space-y-1">
+                  {report.linking_analysis.recommendations.map((rec, idx) => (
+                    <li key={idx} className="text-sm text-yellow-800 flex items-start space-x-2">
+                      <span className="mt-1">•</span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Additional Metrics */}
+            {(report.linking_analysis.nofollow_internal_count > 0 || report.linking_analysis.empty_anchor_count > 0) && (
+              <div className="grid md:grid-cols-2 gap-4 mt-4">
+                {report.linking_analysis.nofollow_internal_count > 0 && (
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <p className="text-sm text-gray-700 mb-1">Nofollow Internal Links</p>
+                    <p className="text-2xl font-bold text-red-700">{report.linking_analysis.nofollow_internal_count}</p>
+                    <p className="text-xs text-red-600 mt-1">Should be 0 for better SEO</p>
+                  </div>
+                )}
+                
+                {report.linking_analysis.empty_anchor_count > 0 && (
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <p className="text-sm text-gray-700 mb-1">Empty Anchor Text</p>
+                    <p className="text-2xl font-bold text-red-700">{report.linking_analysis.empty_anchor_count}</p>
+                    <p className="text-xs text-red-600 mt-1">Add descriptive anchor text</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        {/* ========== END INTERNAL LINKING SECTION ========== */}
+       
+        {/* ========== BACKLINK & REFERRER ANALYSIS SECTION (NEW!) ========== */}
+        {report.backlink_analysis && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="backlink-analysis-section">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2 mb-6">
+              <ExternalLink className="w-7 h-7 text-indigo-600" />
+              <span>Backlink & Referrer Analysis</span>
+            </h2>
+            
+            {/* Main Metrics Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-lg border-l-4 border-blue-500">
+                <p className="text-sm text-gray-700 mb-1 font-medium">Total External Links</p>
+                <p className="text-3xl font-bold text-blue-900">{report.backlink_analysis.total_external_links ?? 0}</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-lg border-l-4 border-green-500">
+                <p className="text-sm text-gray-700 mb-1 font-medium">Dofollow Links</p>
+                <p className="text-3xl font-bold text-green-900">{report.backlink_analysis.dofollow_count ?? 0}</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-5 rounded-lg border-l-4 border-yellow-500">
+                <p className="text-sm text-gray-700 mb-1 font-medium">Unique Domains</p>
+                <p className="text-3xl font-bold text-yellow-900">{report.backlink_analysis.unique_domains ?? 0}</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-lg border-l-4 border-purple-500">
+                <p className="text-sm text-gray-700 mb-1 font-medium">Link Quality Score</p>
+                <p className="text-3xl font-bold text-purple-900">{report.backlink_analysis.link_quality_score ?? 0}/100</p>
+                <p className="text-xs text-gray-600 mt-1">Algorithm-based</p>
+              </div>
+            </div>
+
+            {/* Top Linked Domains Table */}
+            {Array.isArray(report.backlink_analysis.top_linked_domains) && report.backlink_analysis.top_linked_domains.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Top Linked Domains</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="text-left p-3 text-sm font-semibold text-gray-700">Domain</th>
+                        <th className="text-left p-3 text-sm font-semibold text-gray-700">Links</th>
+                        <th className="text-left p-3 text-sm font-semibold text-gray-700">Estimated Authority</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.backlink_analysis.top_linked_domains.slice(0, 10).map((domain, idx) => (
+                        <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
+                          <td className="p-3 text-sm text-gray-900 font-medium">{domain.domain}</td>
+                          <td className="p-3 text-sm text-gray-700">{domain.link_count}</td>
+                          <td className="p-3 text-sm">
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              domain.estimated_authority.includes('High') ? 'bg-green-100 text-green-800' :
+                              domain.estimated_authority.includes('Medium') ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {domain.estimated_authority}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Recommendations */}
+            {Array.isArray(report.backlink_analysis.recommendations) && report.backlink_analysis.recommendations.length > 0 && (
+              <div className="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg">
+                <p className="text-sm font-semibold text-indigo-900 mb-2">🎯 Referrer Strategy & Recommendations:</p>
+                <ul className="space-y-1">
+                  {report.backlink_analysis.recommendations.map((rec, idx) => (
+                    <li key={idx} className="text-sm text-indigo-800 flex items-start space-x-2">
+                      <span className="mt-1">•</span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Additional Metrics */}
+            <div className="grid md:grid-cols-2 gap-4 mt-4">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p className="text-sm text-gray-700 mb-1">Nofollow Links</p>
+                <p className="text-2xl font-bold text-gray-900">{report.backlink_analysis.nofollow_count ?? 0}</p>
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p className="text-sm text-gray-700 mb-1">Dofollow Ratio</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {report.backlink_analysis.total_external_links > 0 
+                    ? Math.round((report.backlink_analysis.dofollow_count / report.backlink_analysis.total_external_links) * 100) 
+                    : 0}%
+                </p>
+                <p className="text-xs text-gray-600 mt-1">Target: 60-80%</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* ========== END BACKLINK ANALYSIS SECTION ========== */}
+
+
+        {/* SEO Issues */}
+        {report.seo_issues && report.seo_issues.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="seo-issues-section">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
+                <AlertTriangle className="w-7 h-7 text-red-500" />
+                <span>SEO Issues Detected</span>
+              </h2>
+              <span className="text-gray-600 font-medium">
+                {report.seo_issues.length} issue{report.seo_issues.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="space-y-4">
+              {report.seo_issues.map((issue, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className={`px-3 py-1 rounded-full text-sm font-semibold border flex items-center space-x-1 ${getPriorityColor(issue.priority)}`}>
+                        {getPriorityIcon(issue.priority)}
+                        <span>{issue.priority}</span>
+                      </div>
+                      <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                        {issue.category}
+                      </span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{issue.issue}</h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    <span className="font-medium text-indigo-600">Fix:</span> {issue.recommendation}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Keyword Strategy */}
+        {report.keyword_strategy && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="keyword-strategy-section">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
+                <Target className="w-7 h-7 text-indigo-600" />
+                <span>Keyword Strategy</span>
+              </h2>
+              <button
+                onClick={() => copyToClipboard(
+                  `Primary: ${report.keyword_strategy.primary_keyword}\n\nLong-tail:\n${report.keyword_strategy.long_tail_keywords.join('\n')}`,
+                  'keywords'
+                )}
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                {copiedSection === 'keywords' ? (
+                  <><Check className="w-4 h-4 text-green-600" /> <span className="text-sm">Copied!</span></>
+                ) : (
+                  <><Copy className="w-4 h-4" /> <span className="text-sm">Copy</span></>
+                )}
+              </button>
+            </div>
+            
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-lg mb-6">
+              <p className="text-sm text-gray-600 mb-2 font-medium">Primary Keyword</p>
+              <p className="text-2xl font-bold text-gray-900">{report.keyword_strategy.primary_keyword}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-600 mb-4 font-medium">Long-tail Keywords</p>
+              <div className="grid md:grid-cols-2 gap-3">
+                {report.keyword_strategy.long_tail_keywords.map((keyword, index) => (
+                  <div key={index} className="flex items-start space-x-3 bg-gray-50 p-4 rounded-lg">
+                    <TrendingUp className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{keyword}</p>
+                      {report.keyword_strategy.keyword_intent[keyword] && (
+                        <span className="text-xs text-gray-600 bg-white px-2 py-1 rounded mt-1 inline-block">
+                          {report.keyword_strategy.keyword_intent[keyword]}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         )}
 
-        {/* 30-Day Action Plan */}
-        {report.ai_report?.action_plan && (
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-lg p-8 mt-8 border-2 border-indigo-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">📅 30-Day Action Plan</h2>
-            <div className="prose prose-indigo max-w-none">
-              <div className="whitespace-pre-line text-gray-800 leading-relaxed">
-                {report.ai_report.action_plan}
+        {/* Competitor Analysis */}
+        {report.competitor_analysis && Object.keys(report.competitor_analysis).length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="competitor-analysis-section">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2 mb-6">
+              <Users className="w-7 h-7 text-indigo-600" />
+              <span>Competitive Landscape</span>
+            </h2>
+
+            {report.competitor_analysis.assumed_competitors && (
+              <div className="mb-6">
+                <p className="text-sm font-medium text-gray-600 mb-3">Likely Competitors</p>
+                <div className="flex flex-wrap gap-2">
+                  {report.competitor_analysis.assumed_competitors.map((competitor, index) => (
+                    <span key={index} className="px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full font-medium">
+                      {competitor}
+                    </span>
+                  ))}
+                </div>
               </div>
+            )}
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {report.competitor_analysis.content_gaps && report.competitor_analysis.content_gaps.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-3">Content Gaps</p>
+                  <ul className="space-y-2">
+                    {report.competitor_analysis.content_gaps.map((gap, index) => (
+                      <li key={index} className="flex items-start space-x-2 text-gray-700">
+                        <span className="text-red-500 mt-1">•</span>
+                        <span>{gap}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {report.competitor_analysis.opportunities && report.competitor_analysis.opportunities.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-3">Opportunities</p>
+                  <ul className="space-y-2">
+                    {report.competitor_analysis.opportunities.map((opp, index) => (
+                      <li key={index} className="flex items-start space-x-2 text-gray-700">
+                        <span className="text-green-500 mt-1">✓</span>
+                        <span>{opp}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Content Recommendations */}
+        {report.content_recommendations && report.content_recommendations.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="content-recommendations-section">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2 mb-6">
+              <FileText className="w-7 h-7 text-indigo-600" />
+              <span>Content Recommendations</span>
+            </h2>
+            <div className="space-y-6">
+              {report.content_recommendations.map((rec, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-semibold">
+                      {rec.page_type}
+                    </span>
+                    <h3 className="text-xl font-bold text-gray-900">{rec.topic}</h3>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <p className="text-sm font-medium text-gray-600 mb-2">Target Keywords</p>
+                    <div className="flex flex-wrap gap-2">
+                      {rec.target_keywords.map((kw, kwIndex) => (
+                        <span key={kwIndex} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {rec.structure && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 mb-3">Suggested Structure</p>
+                      <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                        {rec.structure.h1 && rec.structure.h1.length > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-500 font-medium mb-1">H1</p>
+                            {rec.structure.h1.map((h, hIndex) => (
+                              <p key={hIndex} className="text-gray-900 font-semibold">{h}</p>
+                            ))}
+                          </div>
+                        )}
+                        {rec.structure.h2 && rec.structure.h2.length > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-500 font-medium mb-1">H2</p>
+                            {rec.structure.h2.map((h, hIndex) => (
+                              <p key={hIndex} className="text-gray-800 pl-4">{h}</p>
+                            ))}
+                          </div>
+                        )}
+                        {rec.structure.h3 && rec.structure.h3.length > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-500 font-medium mb-1">H3</p>
+                            {rec.structure.h3.map((h, hIndex) => (
+                              <p key={hIndex} className="text-gray-700 pl-8 text-sm">{h}</p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 30-Day Action Plan */}
+        {report.action_plan_30_days && report.action_plan_30_days.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-8" data-testid="action-plan-section">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2 mb-6">
+              <Calendar className="w-7 h-7 text-indigo-600" />
+              <span>30-Day Action Plan</span>
+            </h2>
+            <div className="space-y-4">
+              {report.action_plan_30_days.map((item, index) => (
+                <div key={index} className="border-l-4 border-indigo-600 bg-gradient-to-r from-indigo-50 to-white p-6 rounded-r-lg">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-lg font-bold text-gray-900">{item.week || `Week ${index + 1}`}</h3>
+                    {item.priority && (
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getPriorityColor(item.priority)}`}>
+                        {item.priority} Priority
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-gray-800 mb-2 leading-relaxed">{item.action}</p>
+                  {item.expected_impact && (
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Expected Impact:</span> {item.expected_impact}
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
