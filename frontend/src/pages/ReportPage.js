@@ -4,7 +4,7 @@ import axios from 'axios';
 import { 
   ArrowLeft, ExternalLink, AlertTriangle, CheckCircle, Info, 
   TrendingUp, Target, Users, FileText, Calendar, Copy, Check,
-  Sparkles, Link2, Image as ImageIcon
+  Sparkles, Link2, Image as ImageIcon, Share2 
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -293,6 +293,123 @@ const ReportPage = () => {
           </div>
         </div>
         {/* ========== END TECHNICAL SEO SECTION ========== */}
+
+{/* ========== SOCIAL & BACKLINK ANALYSIS SECTION (NEW!) ========== */}
+{report.backlink_analysis && (
+  <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="social-backlink-section">
+    <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2 mb-6">
+      <Share2 className="w-7 h-7 text-indigo-600" />
+      <span>Social & Backlink Analysis</span>
+    </h2>
+    
+    {/* Main Metrics Grid */}
+    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-lg border-l-4 border-blue-500">
+        <p className="text-sm text-gray-700 mb-1 font-medium">External Links</p>
+        <p className="text-3xl font-bold text-blue-900">{report.backlink_analysis.total_external_links ?? 0}</p>
+        <p className="text-xs text-gray-600 mt-1">Outbound links</p>
+      </div>
+      
+      <div className="bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-lg border-l-4 border-green-500">
+        <p className="text-sm text-gray-700 mb-1 font-medium">Dofollow Links</p>
+        <p className="text-3xl font-bold text-green-900">{report.backlink_analysis.dofollow_count ?? 0}</p>
+        <p className="text-xs text-gray-600 mt-1">Link equity passing</p>
+      </div>
+      
+      <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-5 rounded-lg border-l-4 border-yellow-500">
+        <p className="text-sm text-gray-700 mb-1 font-medium">Unique Domains</p>
+        <p className="text-3xl font-bold text-yellow-900">{report.backlink_analysis.unique_domains ?? 0}</p>
+        <p className="text-xs text-gray-600 mt-1">Domain diversity</p>
+      </div>
+      
+      <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-lg border-l-4 border-purple-500">
+        <p className="text-sm text-gray-700 mb-1 font-medium">Link Quality</p>
+        <p className="text-3xl font-bold text-purple-900">{report.backlink_analysis.link_quality_score ?? 0}/100</p>
+        <p className="text-xs text-gray-600 mt-1">Algorithm score</p>
+      </div>
+    </div>
+
+    {/* Top Linked Domains Table */}
+    {Array.isArray(report.backlink_analysis.top_linked_domains) && report.backlink_analysis.top_linked_domains.length > 0 && (
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center space-x-2">
+          <ExternalLink className="w-5 h-5 text-indigo-600" />
+          <span>Top Linked Domains (Referrer Potential)</span>
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="text-left p-3 text-sm font-semibold text-gray-700">Domain</th>
+                <th className="text-left p-3 text-sm font-semibold text-gray-700">Links</th>
+                <th className="text-left p-3 text-sm font-semibold text-gray-700">Authority</th>
+              </tr>
+            </thead>
+            <tbody>
+              {report.backlink_analysis.top_linked_domains.slice(0, 10).map((domain, idx) => (
+                <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
+                  <td className="p-3 text-sm text-gray-900 font-medium">{domain.domain}</td>
+                  <td className="p-3 text-sm text-gray-700">{domain.link_count}</td>
+                  <td className="p-3 text-sm">
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                      domain.estimated_authority.includes('High') ? 'bg-green-100 text-green-800' :
+                      domain.estimated_authority.includes('Medium') ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {domain.estimated_authority}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
+
+    {/* Referrer Strategy & Recommendations */}
+    {Array.isArray(report.backlink_analysis.recommendations) && report.backlink_analysis.recommendations.length > 0 && (
+      <div className="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg">
+        <p className="text-sm font-semibold text-indigo-900 mb-2 flex items-center space-x-2">
+          <Target className="w-4 h-4" />
+          <span>Referrer Strategy & Recommendations</span>
+        </p>
+        <ul className="space-y-1">
+          {report.backlink_analysis.recommendations.map((rec, idx) => (
+            <li key={idx} className="text-sm text-indigo-800 flex items-start space-x-2">
+              <span className="mt-1">•</span>
+              <span>{rec}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    {/* Additional Link Metrics */}
+    <div className="grid md:grid-cols-2 gap-4 mt-4">
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <p className="text-sm text-gray-700 mb-1 font-medium">Nofollow Links</p>
+        <p className="text-2xl font-bold text-gray-900">{report.backlink_analysis.nofollow_count ?? 0}</p>
+        <p className="text-xs text-gray-600 mt-1">No link equity transfer</p>
+      </div>
+      
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <p className="text-sm text-gray-700 mb-1 font-medium">Dofollow Ratio</p>
+        <p className="text-2xl font-bold text-gray-900">
+          {report.backlink_analysis.total_external_links > 0 
+            ? Math.round((report.backlink_analysis.dofollow_count / report.backlink_analysis.total_external_links) * 100) 
+            : 0}%
+        </p>
+        <p className="text-xs text-gray-600 mt-1">Target: 60-80%</p>
+      </div>
+    </div>
+  </div>
+)}
+
+/* end of social media
+
+
+
         {/* ========== INTERNAL LINKING SECTION (NEW) ========== */}
         {report.linking_analysis && (
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="internal-linking-section">
