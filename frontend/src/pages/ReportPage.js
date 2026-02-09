@@ -150,7 +150,7 @@ const ReportPage = () => {
               <p className="text-gray-800 leading-relaxed">{report.analysis_summary}</p>
             </div>
           )}
-
+  </div>
          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
   
   {/* Title Tag with Status Badge */}
