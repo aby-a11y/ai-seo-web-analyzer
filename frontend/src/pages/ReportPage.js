@@ -501,7 +501,8 @@ const ReportPage = () => {
   </div>
 )}
 
-/* end of social media
+{/* end of social media */}
+
 
 
 
