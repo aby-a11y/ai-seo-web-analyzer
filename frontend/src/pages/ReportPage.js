@@ -151,32 +151,127 @@ const ReportPage = () => {
             </div>
           )}
 
-          <div className="grid md:grid-cols-4 gap-6 mt-6">
+         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+  
+  {/* Title Tag with Status Badge */}
+  <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border-l-4 border-indigo-500 hover:shadow-lg transition-all">
+    <div className="flex items-center justify-between mb-3">
+      <p className="text-sm text-gray-700 font-semibold">Title Tag</p>
+      {report.title && (
+        <span className={`px-2.5 py-1 rounded-full text-xs font-bold shadow-sm ${
+          report.title.length >= 50 && report.title.length <= 60 
+            ? 'bg-green-100 text-green-800 border border-green-300' 
+            : report.title.length >= 45 && report.title.length <= 70
+            ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+            : 'bg-red-100 text-red-800 border border-red-300'
+        }`}>
+          {report.title.length >= 50 && report.title.length <= 60 
+            ? '✓ Optimal' 
+            : report.title.length >= 45 && report.title.length <= 70
+            ? '⚠ Fair'
+            : '✗ Fix'}
+        </span>
+      )}
+    </div>
+    <p className="font-semibold text-gray-900 text-sm line-clamp-2 mb-2" title={report.title}>
+      {report.title || 'Missing Title'}
+    </p>
+    {report.title && (
+      <p className="text-xs text-gray-600 font-medium">
+        {report.title.length} characters • Target: 50-60
+      </p>
+    )}
+  </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Title Tag</p>
-              <p className="font-medium text-gray-900">{report.title || 'Not found'}</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Word Count</p>
-              <p className="font-medium text-gray-900">{report.word_count.toLocaleString()} words</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">H1 Tags</p>
-              <p className="font-medium text-gray-900">{report.h1_tags.length} found</p>
-            </div>           
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Images (missing alt)</p>
-              <p className="font-medium text-gray-900">
-                <span className={report.images_without_alt > 0 ? 'text-red-600' : 'text-green-600'}>
-                  {report.images_without_alt ?? 0}
-                </span>
-                {' '}/{' '}{report.total_images ?? 0}
-              </p>
-            </div>
+  {/* Meta Description with Status Badge */}
+  <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border-l-4 border-purple-500 hover:shadow-lg transition-all">
+    <div className="flex items-center justify-between mb-3">
+      <p className="text-sm text-gray-700 font-semibold">Meta Description</p>
+      {report.meta_description && (
+        <span className={`px-2.5 py-1 rounded-full text-xs font-bold shadow-sm ${
+          report.meta_description.length >= 150 && report.meta_description.length <= 160 
+            ? 'bg-green-100 text-green-800 border border-green-300' 
+            : report.meta_description.length >= 120 && report.meta_description.length <= 180
+            ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+            : 'bg-red-100 text-red-800 border border-red-300'
+        }`}>
+          {report.meta_description.length >= 150 && report.meta_description.length <= 160 
+            ? '✓ Optimal' 
+            : report.meta_description.length >= 120 && report.meta_description.length <= 180
+            ? '⚠ Fair'
+            : '✗ Fix'}
+        </span>
+      )}
+    </div>
+    <p className="font-semibold text-gray-900 text-sm line-clamp-2 mb-2" title={report.meta_description}>
+      {report.meta_description || 'Missing Meta'}
+    </p>
+    {report.meta_description && (
+      <p className="text-xs text-gray-600 font-medium">
+        {report.meta_description.length} characters • Target: 150-160
+      </p>
+    )}
+  </div>
 
-            </div>
-          </div>
+  {/* Word Count with Status Badge */}
+  <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border-l-4 border-blue-500 hover:shadow-lg transition-all">
+    <div className="flex items-center justify-between mb-3">
+      <p className="text-sm text-gray-700 font-semibold">Content Length</p>
+      <span className={`px-2.5 py-1 rounded-full text-xs font-bold shadow-sm ${
+        report.word_count >= 1000 && report.word_count <= 2500 
+          ? 'bg-green-100 text-green-800 border border-green-300' 
+          : report.word_count >= 500 && report.word_count < 1000
+          ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+          : report.word_count >= 2501 && report.word_count <= 3000
+          ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+          : 'bg-red-100 text-red-800 border border-red-300'
+      }`}>
+        {report.word_count >= 1000 && report.word_count <= 2500 
+          ? '✓ Good' 
+          : report.word_count >= 500 || (report.word_count >= 2501 && report.word_count <= 3000)
+          ? '⚠ Fair'
+          : '✗ Thin'}
+      </span>
+    </div>
+    <p className="text-3xl font-bold text-gray-900 mb-1">
+      {report.word_count.toLocaleString()}
+    </p>
+    <p className="text-xs text-gray-600 font-medium">words • Target: 1000-2500</p>
+  </div>
+
+  {/* Images Alt Text with Status Badge */}
+  <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border-l-4 border-green-500 hover:shadow-lg transition-all">
+    <div className="flex items-center justify-between mb-3">
+      <p className="text-sm text-gray-700 font-semibold">Image Alt Tags</p>
+      <span className={`px-2.5 py-1 rounded-full text-xs font-bold shadow-sm ${
+        (report.images_without_alt ?? 0) === 0 
+          ? 'bg-green-100 text-green-800 border border-green-300' 
+          : (report.images_without_alt ?? 0) <= 3
+          ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+          : 'bg-red-100 text-red-800 border border-red-300'
+      }`}>
+        {(report.images_without_alt ?? 0) === 0 
+          ? '✓ Perfect' 
+          : (report.images_without_alt ?? 0) <= 3
+          ? '⚠ Minor'
+          : '✗ Issue'}
+      </span>
+    </div>
+    <div className="flex items-baseline space-x-2 mb-1">
+      <p className="text-3xl font-bold text-gray-900">{report.total_images ?? 0}</p>
+      <p className="text-sm text-gray-600 font-medium">images</p>
+    </div>
+    <p className={`text-xs font-semibold ${
+      (report.images_without_alt ?? 0) === 0 ? 'text-green-600' : 'text-red-600'
+    }`}>
+      {(report.images_without_alt ?? 0) === 0 
+        ? '✓ All have alt text' 
+        : `${report.images_without_alt} missing alt text`}
+    </p>
+  </div>
+
+</div>
+
         
 
         {/* ========== TECHNICAL SEO SECTION (NEW) ========== */}
