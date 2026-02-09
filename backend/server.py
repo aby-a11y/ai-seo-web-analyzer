@@ -731,29 +731,30 @@ Website URL: {url}
 
 Current Website Metrics:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 TITLE TAG
-- Current: "{scraped_data.get('title', 'Missing')}"
-- Length: {title_length} characters
-- Target: 50-60 characters
+📊 TITLE TAG Priority:
+- ✅ LOW/Success: 50-60 characters (OPTIMAL - no issue needed)
+- ⚠️ MEDIUM: 45-49 or 61-70 characters (needs minor optimization)
+- 🔴 HIGH: <45 or >70 characters (critical issue)
 
-📝 META DESCRIPTION
-- Current: "{scraped_data.get('meta_description', 'Missing')}"
-- Length: {meta_length} characters
-- Target: 150-160 characters
+📝 META DESCRIPTION Priority:
+- ✅ LOW/Success: 150-160 characters (OPTIMAL - no issue needed)
+- ⚠️ MEDIUM: 120-149 or 161-180 characters (acceptable but can improve)
+- 🔴 HIGH: <120 or >180 characters (critical issue)
 
-🏷️ HEADINGS
-- H1 Tags: {', '.join(scraped_data.get('h1_tags', [])) or 'Missing'} (Count: {len(scraped_data.get('h1_tags', []))})
-- H2 Tags: {', '.join(scraped_data.get('h2_tags', [])[:5]) or 'Few/Missing'} (Count: {len(scraped_data.get('h2_tags', []))})
-- Target: 1 H1, 3-6 H2s
+🏷️ HEADINGS Priority:
+- ✅ LOW: Exactly 1 H1 + 3-6 H2s (OPTIMAL)
+- ⚠️ MEDIUM: 1 H1 but <3 or >6 H2s (needs structure improvement)
+- 🔴 HIGH: 0 H1s, Multiple H1s (>1), or zero H2s (critical)
 
-📄 CONTENT
-- Word Count: {scraped_data.get('word_count', 0)} words
-- Target: 500-2000 words (depending on page type)
+📄 CONTENT Priority:
+- ✅ LOW: 1000-2500 words (OPTIMAL for most pages)
+- ⚠️ MEDIUM: 500-999 or 2501-3000 words (acceptable)
+- 🔴 HIGH: <300 words (thin content - critical issue)
 
-🖼️ IMAGES
-- Total Images: {scraped_data.get('total_images', 0)}
-- Missing Alt Text: {scraped_data.get('images_without_alt', 0)} images
-- Target: 0 missing alt texts
+🖼️ IMAGES Priority:
+- ✅ LOW/Success: 0 missing alt texts (OPTIMAL)
+- ⚠️ MEDIUM: 1-3 missing alt texts (needs attention)
+- 🔴 HIGH: >3 missing alt texts or >50% without alt (critical accessibility issue)
 
 🔧 TECHNICAL SEO (ENHANCED!)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
