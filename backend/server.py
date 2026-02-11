@@ -752,22 +752,22 @@ Website URL: {url}
 Current Website Metrics:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📊 TITLE TAG Priority:
-- ✅ LOW/Success: 50-60 characters (OPTIMAL - no issue needed)
+- ✅ LOW/Success: 50-60 characters (Must)
 - ⚠️ MEDIUM: 45-49 or 61-70 characters (needs minor optimization)
 - 🔴 HIGH: <45 or >70 characters (critical issue)
 
 📝 META DESCRIPTION Priority:
-- ✅ LOW/Success: 150-160 characters (OPTIMAL - no issue needed)
+- ✅ LOW/Success: 150-160 characters (Must)
 - ⚠️ MEDIUM: 120-149 or 161-180 characters (acceptable but can improve)
 - 🔴 HIGH: <120 or >180 characters (critical issue)
 
 🏷️ HEADINGS Priority:
-- ✅ LOW: Exactly 1 H1 + 3-6 H2s (OPTIMAL)
+- ✅ LOW: Exactly 1 H1 + 3-6 H2s (Must)
 - ⚠️ MEDIUM: 1 H1 but <3 or >6 H2s (needs structure improvement)
 - 🔴 HIGH: 0 H1s, Multiple H1s (>1), or zero H2s (critical)
 
 📄 CONTENT Priority:
-- ✅ LOW: 1000-2500 words (OPTIMAL for most pages)
+- ✅ LOW: 1000-2500 words (must)
 - ⚠️ MEDIUM: 500-999 or 2501-3000 words (acceptable)
 - 🔴 HIGH: <300 words (thin content - critical issue)
 
