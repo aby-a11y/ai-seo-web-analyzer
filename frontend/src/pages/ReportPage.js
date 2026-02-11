@@ -802,6 +802,7 @@ const ReportPage = () => {
       ))}
     </div>
   )}
+</div>
     
         {/* Keyword Strategy */}
         {report.keyword_strategy && (
