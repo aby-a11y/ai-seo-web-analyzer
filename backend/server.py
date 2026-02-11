@@ -743,6 +743,12 @@ async def analyze_with_ai(url: str, scraped_data: Dict[str, Any]) -> SEOReport:
     schema_analysis = scraped_data.get('schema_analysis', {})
     linking_analysis = scraped_data.get('linking_analysis', {})
     backlink_analysis = scraped_data.get('backlink_analysis', {})
+    h1_count = len(scraped_data.get('h1_tags', []))
+    h2_count = len(scraped_data.get('h2_tags', []))
+    h3_count = len(scraped_data.get('h3_tags', []))
+    h4_count = len(scraped_data.get('h4_tags', []))
+    h5_count = len(scraped_data.get('h5_tags', []))
+    h6_count = len(scraped_data.get('h6_tags', []))
     
     # Create enhanced analysis prompt with ALL metrics
     analysis_prompt = f"""You are a senior SEO consultant analyzing a website. Provide a comprehensive, data-driven SEO audit with SPECIFIC METRICS and ACTIONABLE recommendations.
@@ -780,12 +786,12 @@ Current Website Metrics:
 🏷️ HEADING STRUCTURE ANALYSIS (CRITICAL!)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Current Heading Counts:
-- H1 Tags: {onpage_seo.get('h1_count', 0)} (MUST be exactly 1)
-- H2 Tags: {onpage_seo.get('h2_count', 0)} (Recommended: 3-6)
-- H3 Tags: {onpage_seo.get('h3_count', 0)}
-- H4 Tags: {onpage_seo.get('h4_count', 0)}
-- H5 Tags: {len(scraped_data.get('h5_tags', []))}
-- H6 Tags: {len(scraped_data.get('h6_tags', []))}
+- H1 Tags: {h1_count} (MUST be exactly 1)
+- H2 Tags: {h2_count} (Recommended: 3-6)
+- H3 Tags: {h3_count}
+- H4 Tags: {h4_count}
+- H5 Tags: {h5_count}
+- H6 Tags: {h6_count}
 
 H1 Tag Content: {', '.join(scraped_data.get('h1_tags', [])) or 'MISSING ❌'}
 H2 Tag Samples: {', '.join(scraped_data.get('h2_tags', [])[:3]) or 'MISSING ❌'}
