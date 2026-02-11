@@ -775,6 +775,31 @@ Current Website Metrics:
 - ✅ LOW/Success: 0 missing alt texts (OPTIMAL)
 - ⚠️ MEDIUM: 1-3 missing alt texts (needs attention)
 - 🔴 HIGH: >3 missing alt texts or >50% without alt (critical accessibility issue)
+# AFTER LINE 745 - Add this section before "CRITICAL INSTRUCTIONS"
+
+🏷️ HEADING STRUCTURE ANALYSIS (CRITICAL!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Current Heading Counts:
+- H1 Tags: {onpage_seo.get('h1_count', 0)} (MUST be exactly 1)
+- H2 Tags: {onpage_seo.get('h2_count', 0)} (Recommended: 3-6)
+- H3 Tags: {onpage_seo.get('h3_count', 0)}
+- H4 Tags: {onpage_seo.get('h4_count', 0)}
+- H5 Tags: {len(scraped_data.get('h5_tags', []))}
+- H6 Tags: {len(scraped_data.get('h6_tags', []))}
+
+H1 Tag Content: {', '.join(scraped_data.get('h1_tags', [])) or 'MISSING ❌'}
+H2 Tag Samples: {', '.join(scraped_data.get('h2_tags', [])[:3]) or 'MISSING ❌'}
+
+🔴 CRITICAL H1/H2 PRIORITY RULES:
+- 🔴 HIGH PRIORITY if H1 count = 0 (Missing H1 is CRITICAL for SEO)
+- 🔴 HIGH PRIORITY if H1 count > 1 (Multiple H1s confuse search engines)
+- 🟡 MEDIUM PRIORITY if H2 count = 0 (No content structure)
+- 🟡 MEDIUM PRIORITY if H3 exists but H2 count = 0 (Invalid hierarchy)
+- 🟢 LOW PRIORITY if H2 count > 10 (Too many H2s may dilute focus)
+
+IMPORTANT: YOU MUST generate seo_issues for H1/H2 problems following the priority rules above!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 
 🔧 TECHNICAL SEO (ENHANCED!)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
