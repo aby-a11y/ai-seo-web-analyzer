@@ -119,6 +119,10 @@ class SEOReportResponse(BaseModel):
     meta_description: Optional[str] = None
     h1_tags: List[str] = []
     h2_tags: List[str] = []
+    h3_tags: List[str] = []
+    h4_tags: List[str] = []
+    h5_tags: List[str] = []
+    h6_tags: List[str] = []
     word_count: int = 0
     total_images: int = 0
     images_without_alt: int = 0
