@@ -716,6 +716,44 @@ const ReportPage = () => {
           </div>
         )}
 
+{/* Heading Structure Section */}
+<div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+  <h2 className="text-2xl font-bold text-gray-900 mb-6">
+    Heading Structure (H1-H6)
+  </h2>
+  
+  {/* H1 Tags */}
+  {report.h1_tags && report.h1_tags.length > 0 && (
+    <div className="mb-4">
+      <p className="text-sm font-medium text-gray-600 mb-2">
+        H1 Tags ({report.h1_tags.length})
+      </p>
+      {report.h1_tags.map((h1, idx) => (
+        <p key={idx} className="text-lg font-bold text-gray-900 bg-gray-50 p-3 rounded mb-2">
+          {h1}
+        </p>
+      ))}
+    </div>
+  )}
+
+  {/* H2 Tags */}
+  {report.h2_tags && report.h2_tags.length > 0 && (
+    <div className="mb-4">
+      <p className="text-sm font-medium text-gray-600 mb-2">
+        H2 Tags ({report.h2_tags.length})
+      </p>
+      {report.h2_tags.map((h2, idx) => (
+        <p key={idx} className="text-base font-semibold text-gray-800 bg-gray-50 p-2 rounded mb-2 pl-4">
+          {h2}
+        </p>
+      ))}
+    </div>
+  )}
+
+  {/* H3-H6 similar pattern */}
+</div>
+
+
         {/* Keyword Strategy */}
         {report.keyword_strategy && (
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="keyword-strategy-section">
