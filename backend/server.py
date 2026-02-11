@@ -274,6 +274,10 @@ def check_onpage_seo(soup):
     h1_count = len(soup.find_all("h1"))
     h2_count = len(soup.find_all("h2"))
     h3_count = len(soup.find_all("h3"))
+    h4_count = len(soup.find_all("h4"))
+    h5_count = len(soup.find_all("h5"))
+    h6_count = len(soup.find_all("h6"))
+    
     
     # Images + Alt
     images = soup.find_all("img")
