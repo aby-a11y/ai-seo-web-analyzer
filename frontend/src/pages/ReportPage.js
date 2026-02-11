@@ -750,10 +750,59 @@ const ReportPage = () => {
     </div>
   )}
 
-  {/* H3-H6 similar pattern */}
-</div>
-
-
+{/* H3 Tags */}
+  {report.h3_tags && report.h3_tags.length > 0 && (
+    <div className="mb-4">
+      <p className="text-sm font-medium text-gray-600 mb-2">
+        H3 Tags ({report.h3_tags.length})
+      </p>
+      {report.h3_tags.map((h3, idx) => (
+        <p key={idx} className="text-base font-semibold text-gray-800 bg-gray-50 p-2 rounded mb-2 pl-4">
+          {h3}
+        </p>
+      ))}
+    </div>
+  )}
+{/* H4 Tags */}
+  {report.h4_tags && report.h4_tags.length > 0 && (
+    <div className="mb-4">
+      <p className="text-sm font-medium text-gray-600 mb-2">
+        H4 Tags ({report.h4_tags.length})
+      </p>
+      {report.h4_tags.map((h4, idx) => (
+        <p key={idx} className="text-base font-semibold text-gray-800 bg-gray-50 p-2 rounded mb-2 pl-4">
+          {h4}
+        </p>
+      ))}
+    </div>
+  )}
+{/* H5 Tags */}
+  {report.h5_tags && report.h5_tags.length > 0 && (
+    <div className="mb-4">
+      <p className="text-sm font-medium text-gray-600 mb-2">
+        H5 Tags ({report.h5_tags.length})
+      </p>
+      {report.h5_tags.map((h5, idx) => (
+        <p key={idx} className="text-base font-semibold text-gray-800 bg-gray-50 p-2 rounded mb-2 pl-4">
+          {h5}
+        </p>
+      ))}
+    </div>
+  )}
+{/* H6Tags */}
+  {report.h6_tags && report.h6_tags.length > 0 && (
+    <div className="mb-4">
+      <p className="text-sm font-medium text-gray-600 mb-2">
+        H6 Tags ({report.h6_tags.length})
+      </p>
+      {report.h6_tags.map((h6, idx) => (
+        <p key={idx} className="text-base font-semibold text-gray-800 bg-gray-50 p-2 rounded mb-2 pl-4">
+          {h6}
+        </p>
+      ))}
+    </div>
+  )}
+    
         {/* Keyword Strategy */}
         {report.keyword_strategy && (
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="keyword-strategy-section">
