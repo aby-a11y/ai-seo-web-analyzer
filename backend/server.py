@@ -648,6 +648,9 @@ async def scrape_website(url: str) -> Dict[str, Any]:
         h1_tags = [h1.get_text().strip() for h1 in soup.find_all('h1')]
         h2_tags = [h2.get_text().strip() for h2 in soup.find_all('h2')]
         h3_tags = [h3.get_text().strip() for h3 in soup.find_all('h3')]
+        h4_tags = [h3.get_text().strip() for h3 in soup.find_all('h4')]
+        h5_tags = [h3.get_text().strip() for h3 in soup.find_all('h5')]
+        h6_tags = [h3.get_text().strip() for h3 in soup.find_all('h6')]
         
         # Extract images and count missing alt attributes
         images = soup.find_all('img')
@@ -685,6 +688,10 @@ async def scrape_website(url: str) -> Dict[str, Any]:
             'h1_tags': h1_tags,
             'h2_tags': h2_tags,
             'h3_tags': h3_tags,
+            'h4_tags': h4_tags,
+            'h5_tags': h5_tags,
+            'h6_tags': h6_tags,
+            
             'word_count': word_count,
             'total_images': total_images,
             'images_without_alt': images_without_alt,
