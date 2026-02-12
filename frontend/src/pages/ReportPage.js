@@ -973,6 +973,96 @@ const ReportPage = () => {
                 </ul>
               </div>
             )}
+            {/* 4.3 Content Recommendations - COLLAPSIBLE */}
+{report.content_recommendations && report.content_recommendations.length > 0 && (
+  <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="content-recommendations-section">
+    <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2 mb-6">
+      <FileText className="w-6 h-6 text-indigo-600" />
+      <span>Content Recommendations</span>
+    </h3>
+    <div className="space-y-3">
+      {report.content_recommendations.map((rec, index) => (
+        <div 
+          key={index} 
+          className={`accordion-item border rounded-lg overflow-hidden ${
+            expandedSection === `content-${index}` ? 'expanded border-indigo-500' : 'border-gray-200'
+          }`}
+        >
+          {/* CLICKABLE HEADER */}
+          <button
+            onClick={() => setExpandedSection(expandedSection === `content-${index}` ? null : `content-${index}`)}
+            className="accordion-button w-full flex items-center justify-between p-4 text-left"
+          >
+            <div className="flex items-center space-x-3">
+              <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-semibold">
+                {rec.page_type}
+              </span>
+              <h4 className="text-lg font-bold text-gray-900">{rec.topic}</h4>
+            </div>
+            <div className={`accordion-icon text-gray-400 text-2xl ${expandedSection === `content-${index}` ? 'rotated' : ''}`}>
+              {expandedSection === `content-${index}` ? '−' : '+'}
+            </div>
+          </button>
+
+          {/* COLLAPSIBLE DETAILS */}
+          <div className={`accordion-content ${expandedSection === `content-${index}` ? 'expanded' : ''}`}>
+            {expandedSection === `content-${index}` && (
+              <div className="accordion-details px-4 pb-4">
+                <div className="bg-gray-50 p-4 rounded-lg border-t border-gray-200">
+                  {/* KEYWORDS */}
+                  <div className="mb-4">
+                    <p className="text-sm font-medium text-gray-600 mb-2">🎯 Target Keywords</p>
+                    <div className="flex flex-wrap gap-2">
+                      {rec.target_keywords.map((kw, kwIndex) => (
+                        <span key={kwIndex} className="px-3 py-1 bg-white text-gray-700 rounded-full text-sm border border-gray-300">
+                          {kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* STRUCTURE */}
+                  {rec.structure && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 mb-3">📝 Suggested Structure</p>
+                      <div className="bg-white p-4 rounded-lg space-y-3 border border-gray-200">
+                        {rec.structure.h1 && rec.structure.h1.length > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-500 font-medium mb-1">H1</p>
+                            {rec.structure.h1.map((h, hIndex) => (
+                              <p key={hIndex} className="text-gray-900 font-semibold">{h}</p>
+                            ))}
+                          </div>
+                        )}
+                        {rec.structure.h2 && rec.structure.h2.length > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-500 font-medium mb-1">H2</p>
+                            {rec.structure.h2.map((h, hIndex) => (
+                              <p key={hIndex} className="text-gray-800 pl-4">{h}</p>
+                            ))}
+                          </div>
+                        )}
+                        {rec.structure.h3 && rec.structure.h3.length > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-500 font-medium mb-1">H3</p>
+                            {rec.structure.h3.map((h, hIndex) => (
+                              <p key={hIndex} className="text-gray-700 pl-8 text-sm">{h}</p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
 
             {report.competitor_analysis.opportunities && report.competitor_analysis.opportunities.length > 0 && (
               <div>
