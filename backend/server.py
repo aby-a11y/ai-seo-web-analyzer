@@ -225,14 +225,35 @@ def check_technical_seo(soup, final_url):
     except:
         robots_exists = False
     
-    sitemap_url = urljoin(root, "/sitemap.xml")
+    # ========== ENHANCED SITEMAP DETECTION ==========
+    sitemap_urls = [
+        "/sitemap.xml",
+        "/sitemap_index.xml",
+        "/sitemap-index.xml",
+        "/sitemap1.xml",
+        "/wp-sitemap.xml",  # WordPress
+        "/post-sitemap.xml"
+    ]
+    
     sitemap_exists = False
+    sitemap_url = urljoin(root, "/sitemap.xml")
+    
     try:
         import httpx
         with httpx.Client(timeout=10) as client:
-            sitemap_exists = client.get(sitemap_url).status_code == 200
+            for path in sitemap_urls:
+                test_url = urljoin(root, path)
+                try:
+                    response = client.get(test_url)
+                    if response.status_code == 200 and ('xml' in response.headers.get('content-type', '').lower() or '<?xml' in response.text[:100]):
+                        sitemap_exists = True
+                        sitemap_url = test_url
+                        break
+                except:
+                    continue
     except:
         sitemap_exists = False
+
     
     # ========== META ROBOTS / NOINDEX ==========
     noindex_meta = soup.find("meta", attrs={"name": "robots"})
