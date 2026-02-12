@@ -17,6 +17,8 @@ const ReportPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [copiedSection, setCopiedSection] = useState('');
+  const [expandedIssue, setExpandedIssue] = useState(null);
+  const [expandedSection, setExpandedSection] = useState(null);
 
   useEffect(() => {
     fetchReport();
@@ -857,41 +859,85 @@ const ReportPage = () => {
         <p className="text-gray-600 mb-6">Priority-based improvements and strategic guidance</p>
       </div>
 
-      {/* 4.1 SEO Issues */}
-      {report.seo_issues && report.seo_issues.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="seo-issues-section">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
-              <AlertTriangle className="w-6 h-6 text-red-500" />
-              <span>SEO Issues Detected</span>
-            </h3>
-            <span className="text-gray-600 font-medium">
-              {report.seo_issues.length} issue{report.seo_issues.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          <div className="space-y-4">
-            {report.seo_issues.map((issue, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <div className={`px-3 py-1 rounded-full text-sm font-semibold border flex items-center space-x-1 ${getPriorityColor(issue.priority)}`}>
-                      {getPriorityIcon(issue.priority)}
-                      <span>{issue.priority}</span>
+
+{/* 4.1 SEO Issues - COLLAPSIBLE */}
+{report.seo_issues && report.seo_issues.length > 0 && (
+  <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="seo-issues-section">
+    <div className="flex items-center justify-between mb-6">
+      <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+        <AlertTriangle className="w-6 h-6 text-red-500" />
+        <span>SEO Issues Detected</span>
+      </h3>
+      <span className="text-gray-600 font-medium">
+        {report.seo_issues.length} issue{report.seo_issues.length !== 1 ? 's' : ''}
+      </span>
+    </div>
+    
+    <div className="space-y-3">
+      {report.seo_issues.map((issue, index) => (
+        <div 
+          key={index} 
+          className={`accordion-item border rounded-lg overflow-hidden ${
+            expandedIssue === index ? 'expanded border-indigo-500' : 'border-gray-200'
+          }`}
+        >
+          {/* CLICKABLE HEADER */}
+          <button
+            onClick={() => setExpandedIssue(expandedIssue === index ? null : index)}
+            className="accordion-button w-full flex items-center justify-between p-4 text-left"
+          >
+            <div className="flex items-center space-x-3 flex-1">
+              <div className={`px-3 py-1 rounded-full text-sm font-semibold border flex items-center space-x-1 ${getPriorityColor(issue.priority)}`}>
+                {getPriorityIcon(issue.priority)}
+                <span>{issue.priority}</span>
+              </div>
+              <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                {issue.category}
+              </span>
+              <h4 className="text-base font-semibold text-gray-900">{issue.issue}</h4>
+            </div>
+            {/* PLUS/MINUS ICON */}
+            <div className={`accordion-icon text-gray-400 text-2xl font-bold ml-4 ${expandedIssue === index ? 'rotated' : ''}`}>
+              {expandedIssue === index ? '−' : '+'}
+            </div>
+          </button>
+          
+          {/* COLLAPSIBLE CONTENT */}
+          <div className={`accordion-content ${expandedIssue === index ? 'expanded' : ''}`}>
+            {expandedIssue === index && (
+              <div className="accordion-details px-4 pb-4">
+                <div className="bg-gray-50 p-4 rounded-lg border-t border-gray-200">
+                  {/* FIX SECTION */}
+                  <div className="mb-3">
+                    <p className="text-sm font-semibold text-indigo-600 mb-2">🔧 How to Fix:</p>
+                    <div className="bg-white p-3 rounded border-l-4 border-indigo-600">
+                      <p className="text-sm text-gray-700 leading-relaxed">{issue.recommendation}</p>
                     </div>
-                    <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                      {issue.category}
-                    </span>
+                  </div>
+                  
+                  {/* IMPACT INFO */}
+                  <div className="flex items-start space-x-2 text-xs text-gray-600 bg-blue-50 p-3 rounded">
+                    <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <p>
+                      <strong>Priority Impact:</strong> {
+                        issue.priority === 'High' 
+                          ? '🔥 Critical - Fix immediately for maximum SEO benefit' 
+                          : issue.priority === 'Medium' 
+                            ? '⚠️ Important - Address within 1-2 weeks' 
+                            : '✓ Minor - Fix when possible'
+                      }
+                    </p>
                   </div>
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">{issue.issue}</h4>
-                <p className="text-gray-700 leading-relaxed">
-                  <span className="font-medium text-indigo-600">Fix:</span> {issue.recommendation}
-                </p>
               </div>
-            ))}
+            )}
           </div>
         </div>
-      )}
+      ))}
+    </div>
+  </div>
+)}
+
       {/* 4.2 Competitor Analysis */}
       {report.competitor_analysis && Object.keys(report.competitor_analysis).length > 0 && (
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="competitor-analysis-section">
@@ -945,70 +991,84 @@ const ReportPage = () => {
         </div>
       )}
 
-      {/* 4.3 Content Recommendations */}
-      {report.content_recommendations && report.content_recommendations.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="content-recommendations-section">
-          <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2 mb-6">
-            <FileText className="w-6 h-6 text-indigo-600" />
-            <span>Content Recommendations</span>
-          </h3>
-          <div className="space-y-6">
-            {report.content_recommendations.map((rec, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-center space-x-3 mb-4">
-                  <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-semibold">
-                    {rec.page_type}
-                  </span>
-                  <h4 className="text-xl font-bold text-gray-900">{rec.topic}</h4>
-                </div>
-
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-600 mb-2">Target Keywords</p>
-                  <div className="flex flex-wrap gap-2">
-                    {rec.target_keywords.map((kw, kwIndex) => (
-                      <span key={kwIndex} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                        {kw}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {rec.structure && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-3">Suggested Structure</p>
-                    <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                      {rec.structure.h1 && rec.structure.h1.length > 0 && (
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium mb-1">H1</p>
-                          {rec.structure.h1.map((h, hIndex) => (
-                            <p key={hIndex} className="text-gray-900 font-semibold">{h}</p>
-                          ))}
-                        </div>
-                      )}
-                      {rec.structure.h2 && rec.structure.h2.length > 0 && (
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium mb-1">H2</p>
-                          {rec.structure.h2.map((h, hIndex) => (
-                            <p key={hIndex} className="text-gray-800 pl-4">{h}</p>
-                          ))}
-                        </div>
-                      )}
-                      {rec.structure.h3 && rec.structure.h3.length > 0 && (
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium mb-1">H3</p>
-                          {rec.structure.h3.map((h, hIndex) => (
-                            <p key={hIndex} className="text-gray-700 pl-8 text-sm">{h}</p>
-                          ))}
-                        </div>
-                      )}
+{/* 4.1 SEO Issues - COLLAPSIBLE */}
+{report.seo_issues && report.seo_issues.length > 0 && (
+  <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="seo-issues-section">
+    <div className="flex items-center justify-between mb-6">
+      <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+        <AlertTriangle className="w-6 h-6 text-red-500" />
+        <span>SEO Issues Detected</span>
+      </h3>
+      <span className="text-gray-600 font-medium">
+        {report.seo_issues.length} issue{report.seo_issues.length !== 1 ? 's' : ''}
+      </span>
+    </div>
+    
+    <div className="space-y-3">
+      {report.seo_issues.map((issue, index) => (
+        <div 
+          key={index} 
+          className={`accordion-item border rounded-lg overflow-hidden ${
+            expandedIssue === index ? 'expanded border-indigo-500' : 'border-gray-200'
+          }`}
+        >
+          {/* CLICKABLE HEADER */}
+          <button
+            onClick={() => setExpandedIssue(expandedIssue === index ? null : index)}
+            className="accordion-button w-full flex items-center justify-between p-4 text-left"
+          >
+            <div className="flex items-center space-x-3 flex-1">
+              <div className={`px-3 py-1 rounded-full text-sm font-semibold border flex items-center space-x-1 ${getPriorityColor(issue.priority)}`}>
+                {getPriorityIcon(issue.priority)}
+                <span>{issue.priority}</span>
+              </div>
+              <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                {issue.category}
+              </span>
+              <h4 className="text-base font-semibold text-gray-900">{issue.issue}</h4>
+            </div>
+            {/* PLUS/MINUS ICON */}
+            <div className={`accordion-icon text-gray-400 text-2xl font-bold ml-4 ${expandedIssue === index ? 'rotated' : ''}`}>
+              {expandedIssue === index ? '−' : '+'}
+            </div>
+          </button>
+          
+          {/* COLLAPSIBLE CONTENT */}
+          <div className={`accordion-content ${expandedIssue === index ? 'expanded' : ''}`}>
+            {expandedIssue === index && (
+              <div className="accordion-details px-4 pb-4">
+                <div className="bg-gray-50 p-4 rounded-lg border-t border-gray-200">
+                  {/* FIX SECTION */}
+                  <div className="mb-3">
+                    <p className="text-sm font-semibold text-indigo-600 mb-2">🔧 How to Fix:</p>
+                    <div className="bg-white p-3 rounded border-l-4 border-indigo-600">
+                      <p className="text-sm text-gray-700 leading-relaxed">{issue.recommendation}</p>
                     </div>
                   </div>
-                )}
+                  
+                  {/* IMPACT INFO */}
+                  <div className="flex items-start space-x-2 text-xs text-gray-600 bg-blue-50 p-3 rounded">
+                    <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <p>
+                      <strong>Priority Impact:</strong> {
+                        issue.priority === 'High' 
+                          ? '🔥 Critical - Fix immediately for maximum SEO benefit' 
+                          : issue.priority === 'Medium' 
+                            ? '⚠️ Important - Address within 1-2 weeks' 
+                            : '✓ Minor - Fix when possible'
+                      }
+                    </p>
+                  </div>
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
-      )}
+      ))}
+    </div>
+  </div>
+)}
+
       {/* 4.4 30-Day Action Plan */}
       {report.action_plan_30_days && report.action_plan_30_days.length > 0 && (
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="action-plan-section">
