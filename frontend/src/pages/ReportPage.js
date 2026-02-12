@@ -385,6 +385,10 @@ const ReportPage = () => {
                 {report.sitemap_found ? 'Sitemap.xml accessible' : 'Create sitemap.xml for better crawling'}
               </p>
             </div>
+          </div>
+        </div>
+
+           
                                 
 
         
