@@ -4,7 +4,7 @@ import axios from 'axios';
 import { 
   ArrowLeft, ExternalLink, AlertTriangle, CheckCircle, Info, 
   TrendingUp, Target, Users, FileText, Calendar, Copy, Check,
-  Sparkles, Link2, Image as ImageIcon, Share2 
+  Sparkles, Link2, Image as ImageIcon, Share2, Shield
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -386,25 +386,7 @@ const ReportPage = () => {
               </p>
             </div>
                                 
-                {/* 🔥 NEW: NOINDEX STATUS */}
-                <div className="flex items-center space-x-2">
-                  {report.sitemap_found ? (
-                    <>
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <span className="font-bold text-green-700">✓ Found</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                      <span className="font-bold text-yellow-700">Not Found</span>
-                    </>
-                  )}
-                </div>
-              </div>
-              {report.sitemap_found ? 'Sitemap.xml accessible' : 'Create sitemap.xml for better crawling'}
-            </p>
-          </div>
-        </div>
+
         
         {/* 🔥 NEW: NOINDEX WARNING CARD */}
         {report.technical_seo?.noindex && (
