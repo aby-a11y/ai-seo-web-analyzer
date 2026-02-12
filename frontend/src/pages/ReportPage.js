@@ -385,8 +385,51 @@ const ReportPage = () => {
                 {report.sitemap_found ? 'Sitemap.xml accessible' : 'Create sitemap.xml for better crawling'}
               </p>
             </div>
+                                
+                {/* 🔥 NEW: NOINDEX STATUS */}
+                <div className="flex items-center space-x-2">
+                  {report.sitemap_found ? (
+                    <>
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span className="font-bold text-green-700">✓ Found</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                      <span className="font-bold text-yellow-700">Not Found</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              {report.sitemap_found ? 'Sitemap.xml accessible' : 'Create sitemap.xml for better crawling'}
+            </p>
           </div>
         </div>
+        
+        {/* 🔥 NEW: NOINDEX WARNING CARD */}
+        {report.technical_seo?.noindex && (
+          <div className="bg-red-50 rounded-2xl shadow-lg p-8 border-2 border-red-300">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-3 mb-6">
+              <Shield className="w-7 h-7 text-indigo-600" />
+              <span>⚠️ Noindex Warning</span>
+            </h2>
+            <div className="bg-white rounded-xl p-6 border border-red-200">
+              <p className="text-xs text-gray-600 mb-2">META ROBOTS STATUS</p>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-700 font-semibold">Noindex Detected</span>
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  <span className="font-bold text-red-700">⚠️ NOINDEXED!</span>
+                </div>
+              </div>
+              <p className="text-xs text-red-600 mt-3">
+                ⚠️ This page is blocked from search engines! Meta robots directive: <strong>{report.technical_seo.robots_directive || 'noindex'}</strong>
+              </p>
+            </div>
+          </div>
+        )}
+
+
         {/* ========== END TECHNICAL SEO SECTION ========== */}
 
 {/* ========== SOCIAL & BACKLINK ANALYSIS SECTION (NEW!) ========== */}
