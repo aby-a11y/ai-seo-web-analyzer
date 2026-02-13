@@ -20,8 +20,6 @@ const ReportPage = () => {
   const [copiedSection, setCopiedSection] = useState('');
   const [expandedIssue, setExpandedIssue] = useState(null);
   const [expandedSection, setExpandedSection] = useState(null);
-  const [expandedHeading, setExpandedHeading] = useState(null);
-
 
   useEffect(() => {
     fetchReport();
@@ -299,160 +297,91 @@ const ReportPage = () => {
             <p className="text-2xl font-bold text-gray-900">{report.h1_tags[0]}</p>
           </div>
         )}
-        </div>
+        {/* H2-H6 Heading Structure */}
+        <div className="mt-6">
+          <p className="text-lg font-semibold text-gray-900 mb-4">Heading Hierarchy (H2-H6)</p>
 
-      {/* H2-H6 Heading Structure - COLLAPSIBLE */}
-<div className="mt-6">
-  <p className="text-lg font-semibold text-gray-900 mb-4">Heading Hierarchy (H2-H6)</p>
-  
-  <div className="space-y-3">
-    {/* H2 Tags - Collapsible */}
-    {report.h2tags && report.h2tags.length > 0 && (
-      <div className={`accordion-item border rounded-lg overflow-hidden ${expandedHeading === 'h2' ? 'border-indigo-500' : 'border-gray-200'}`}>
-        <button
-          onClick={() => setExpandedHeading(expandedHeading === 'h2' ? null : 'h2')}
-          className="accordion-button w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
-        >
-          <div className="flex items-center space-x-3">
-            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-              H2 Tags ({report.h2tags.length})
-            </span>
-          </div>
-          <div className={`accordion-icon text-gray-400 text-2xl font-bold ${expandedHeading === 'h2' ? 'rotate-45' : ''}`}>
-            +
-          </div>
-        </button>
-        
-        <div className={`accordion-content ${expandedHeading === 'h2' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="accordion-details px-4 pb-4 space-y-2">
-            {report.h2tags.map((h2, idx) => (
-              <p key={idx} className="text-base font-semibold text-gray-800 bg-gray-50 p-2 rounded pl-4">
-                {h2}
+          {/* H2 Tags */}
+          {report.h2_tags && report.h2_tags.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm font-medium text-gray-600 mb-2">
+                H2 Tags ({report.h2_tags.length})
               </p>
-            ))}
-          </div>
+              <div className="space-y-2">
+                {report.h2_tags.map((h2, idx) => (
+                  <p key={idx} className="text-base font-semibold text-gray-800 bg-gray-50 p-2 rounded pl-4">
+                    {h2}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* H3 Tags */}
+          {report.h3_tags && report.h3_tags.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm font-medium text-gray-600 mb-2">
+                H3 Tags ({report.h3_tags.length})
+              </p>
+              <div className="space-y-2">
+                {report.h3_tags.map((h3, idx) => (
+                  <p key={idx} className="text-sm text-gray-700 bg-gray-50 p-2 rounded pl-6">
+                    {h3}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* H4 Tags */}
+          {report.h4_tags && report.h4_tags.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm font-medium text-gray-600 mb-2">
+                H4 Tags ({report.h4_tags.length})
+              </p>
+              <div className="space-y-2">
+                {report.h4_tags.map((h4, idx) => (
+                  <p key={idx} className="text-sm text-gray-700 bg-gray-50 p-2 rounded pl-8">
+                    {h4}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* H5 Tags */}
+          {report.h5_tags && report.h5_tags.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm font-medium text-gray-600 mb-2">
+                H5 Tags ({report.h5_tags.length})
+              </p>
+              <div className="space-y-2">
+                {report.h5_tags.map((h5, idx) => (
+                  <p key={idx} className="text-sm text-gray-700 bg-gray-50 p-2 rounded pl-10">
+                    {h5}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* H6 Tags */}
+          {report.h6_tags && report.h6_tags.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm font-medium text-gray-600 mb-2">
+                H6 Tags ({report.h6_tags.length})
+              </p>
+              <div className="space-y-2">
+                {report.h6_tags.map((h6, idx) => (
+                  <p key={idx} className="text-sm text-gray-700 bg-gray-50 p-2 rounded pl-12">
+                    {h6}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    )}
-
-    {/* H3 Tags - Collapsible */}
-    {report.h3tags && report.h3tags.length > 0 && (
-      <div className={`accordion-item border rounded-lg overflow-hidden ${expandedHeading === 'h3' ? 'border-indigo-500' : 'border-gray-200'}`}>
-        <button
-          onClick={() => setExpandedHeading(expandedHeading === 'h3' ? null : 'h3')}
-          className="accordion-button w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
-        >
-          <div className="flex items-center space-x-3">
-            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-              H3 Tags ({report.h3tags.length})
-            </span>
-          </div>
-          <div className={`accordion-icon text-gray-400 text-2xl font-bold ${expandedHeading === 'h3' ? 'rotate-45' : ''}`}>
-            +
-          </div>
-        </button>
-        
-        <div className={`accordion-content ${expandedHeading === 'h3' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="accordion-details px-4 pb-4 space-y-2">
-            {report.h3tags.map((h3, idx) => (
-              <p key={idx} className="text-sm text-gray-700 bg-gray-50 p-2 rounded pl-6">
-                {h3}
-              </p>
-            ))}
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* H4 Tags - Collapsible */}
-    {report.h4tags && report.h4tags.length > 0 && (
-      <div className={`accordion-item border rounded-lg overflow-hidden ${expandedHeading === 'h4' ? 'border-indigo-500' : 'border-gray-200'}`}>
-        <button
-          onClick={() => setExpandedHeading(expandedHeading === 'h4' ? null : 'h4')}
-          className="accordion-button w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
-        >
-          <div className="flex items-center space-x-3">
-            <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
-              H4 Tags ({report.h4tags.length})
-            </span>
-          </div>
-          <div className={`accordion-icon text-gray-400 text-2xl font-bold ${expandedHeading === 'h4' ? 'rotate-45' : ''}`}>
-            +
-          </div>
-        </button>
-        
-        <div className={`accordion-content ${expandedHeading === 'h4' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="accordion-details px-4 pb-4 space-y-2">
-            {report.h4tags.map((h4, idx) => (
-              <p key={idx} className="text-sm text-gray-700 bg-gray-50 p-2 rounded pl-8">
-                {h4}
-              </p>
-            ))}
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* H5 Tags - Collapsible */}
-    {report.h5tags && report.h5tags.length > 0 && (
-      <div className={`accordion-item border rounded-lg overflow-hidden ${expandedHeading === 'h5' ? 'border-indigo-500' : 'border-gray-200'}`}>
-        <button
-          onClick={() => setExpandedHeading(expandedHeading === 'h5' ? null : 'h5')}
-          className="accordion-button w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
-        >
-          <div className="flex items-center space-x-3">
-            <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
-              H5 Tags ({report.h5tags.length})
-            </span>
-          </div>
-          <div className={`accordion-icon text-gray-400 text-2xl font-bold ${expandedHeading === 'h5' ? 'rotate-45' : ''}`}>
-            +
-          </div>
-        </button>
-        
-        <div className={`accordion-content ${expandedHeading === 'h5' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="accordion-details px-4 pb-4 space-y-2">
-            {report.h5tags.map((h5, idx) => (
-              <p key={idx} className="text-sm text-gray-700 bg-gray-50 p-2 rounded pl-10">
-                {h5}
-              </p>
-            ))}
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* H6 Tags - Collapsible */}
-    {report.h6tags && report.h6tags.length > 0 && (
-      <div className={`accordion-item border rounded-lg overflow-hidden ${expandedHeading === 'h6' ? 'border-indigo-500' : 'border-gray-200'}`}>
-        <button
-          onClick={() => setExpandedHeading(expandedHeading === 'h6' ? null : 'h6')}
-          className="accordion-button w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
-        >
-          <div className="flex items-center space-x-3">
-            <span className="px-3 py-1 bg-pink-100 text-pink-800 rounded-full text-sm font-semibold">
-              H6 Tags ({report.h6tags.length})
-            </span>
-          </div>
-          <div className={`accordion-icon text-gray-400 text-2xl font-bold ${expandedHeading === 'h6' ? 'rotate-45' : ''}`}>
-            +
-          </div>
-        </button>
-        
-        <div className={`accordion-content ${expandedHeading === 'h6' ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="accordion-details px-4 pb-4 space-y-2">
-            {report.h6tags.map((h6, idx) => (
-              <p key={idx} className="text-sm text-gray-700 bg-gray-50 p-2 rounded pl-12">
-                {h6}
-              </p>
-            ))}
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
-</div>
-
       {/* ========== END SECTION 1: BASIC SEO ========== */}
       {/* ========== SECTION 2: TECHNICAL SEO (ADVANCED) ========== */}
       <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="technical-seo-section">
