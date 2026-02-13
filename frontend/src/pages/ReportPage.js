@@ -20,6 +20,8 @@ const ReportPage = () => {
   const [copiedSection, setCopiedSection] = useState('');
   const [expandedIssue, setExpandedIssue] = useState(null);
   const [expandedSection, setExpandedSection] = useState(null);
+  const [expandedHeading, setExpandedHeading] = useState(null);
+
 
   useEffect(() => {
     fetchReport();
