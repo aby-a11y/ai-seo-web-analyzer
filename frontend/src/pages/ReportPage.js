@@ -299,6 +299,8 @@ const ReportPage = () => {
             <p className="text-2xl font-bold text-gray-900">{report.h1_tags[0]}</p>
           </div>
         )}
+        </div>
+
       {/* H2-H6 Heading Structure - COLLAPSIBLE */}
 <div className="mt-6">
   <p className="text-lg font-semibold text-gray-900 mb-4">Heading Hierarchy (H2-H6)</p>
