@@ -681,7 +681,6 @@ async def scrape_website(url: str) -> Dict[str, Any]:
         images = soup.find_all('img')
         total_images = len(images)
         images_without_alt = len([img for img in images if not img.get('alt') or not img.get('alt').strip()])
-        total_images = scraped_data.get('image_count', 0)  
         
         # Extract all text content for word count
         text_content = soup.get_text()
@@ -773,8 +772,7 @@ async def analyze_with_ai(url: str, scraped_data: Dict[str, Any]) -> SEOReport:
     h6_count = len(scraped_data.get('h6_tags', []))
     
     # Create enhanced analysis prompt with ALL metrics
-      # Create enhanced analysis prompt with VERIFIED DATA
-  analysis_prompt = f"""You are a senior SEO consultant analyzing a website. Provide a comprehensive, data-driven SEO audit with SPECIFIC METRICS and ACTIONABLE recommendations.
+    analysis_prompt = f"""You are a senior SEO consultant analyzing a website. Provide a comprehensive, data-driven SEO audit with SPECIFIC METRICS and ACTIONABLE recommendations.
 
 Website URL: {url}
 
