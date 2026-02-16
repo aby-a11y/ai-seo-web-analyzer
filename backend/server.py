@@ -681,6 +681,7 @@ async def scrape_website(url: str) -> Dict[str, Any]:
         images = soup.find_all('img')
         total_images = len(images)
         images_without_alt = len([img for img in images if not img.get('alt') or not img.get('alt').strip()])
+        total_images = scraped_data.get('image_count', 0)  
         
         # Extract all text content for word count
         text_content = soup.get_text()
