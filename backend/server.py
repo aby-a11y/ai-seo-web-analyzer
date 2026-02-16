@@ -771,62 +771,66 @@ async def analyze_with_ai(url: str, scraped_data: Dict[str, Any]) -> SEOReport:
     h5_count = len(scraped_data.get('h5_tags', []))
     h6_count = len(scraped_data.get('h6_tags', []))
     
+    images_without_alt = scraped_data.get('images_without_alt', 0)
+    total_images = scraped_data.get('image_count', 0)
+    word_count = scraped_data.get('word_count', 0)
+
+
+    
     # Create enhanced analysis prompt with ALL metrics
+      # Create enhanced analysis prompt with VERIFIED DATA
     analysis_prompt = f"""You are a senior SEO consultant analyzing a website. Provide a comprehensive, data-driven SEO audit with SPECIFIC METRICS and ACTIONABLE recommendations.
 
 Website URL: {url}
 
-Current Website Metrics:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ CRITICAL: USE ONLY THE VERIFIED DATA BELOW - DO NOT RECALCULATE!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 VERIFIED TITLE TAG DATA:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 TITLE TAG Priority:
-- ✅ LOW/Success: 50-60 characters (Must)
-- ⚠️ MEDIUM: 45-49 or 61-70 characters (needs minor optimization)
-- 🔴 HIGH: <45 or >70 characters (critical issue)
+Current Title: "{scraped_data.get('title', 'NOT SET')}"
+Current Length: {title_length} characters (EXACT - DO NOT RECALCULATE)
+VERIFIED STATUS: {"✅ OPTIMAL - Do NOT add to seo_issues" if 50 <= title_length <= 60 else ("⚠️ MEDIUM PRIORITY - MUST add to seo_issues as 'Title Tag'" if 45 <= title_length < 50 or 61 <= title_length <= 70 else "🔴 HIGH PRIORITY - MUST add to seo_issues as 'Title Tag'")}
 
-📝 META DESCRIPTION Priority:
-- ✅ LOW/Success: 150-160 characters (Must)
-- ⚠️ MEDIUM: 120-149 or 161-180 characters (acceptable but can improve)
-- 🔴 HIGH: <120 or >180 characters (critical issue)
-
-🏷️ HEADINGS Priority:
-- ✅ LOW: Exactly 1 H1 + 3-6 H2s (Must)
-- ⚠️ MEDIUM: 1 H1 but <3 or >6 H2s (needs structure improvement)
-- 🔴 HIGH: 0 H1s, Multiple H1s (>1), or zero H2s (critical)
-
-📄 CONTENT Priority:
-- ✅ LOW: 1000-2500 words (must)
-- ⚠️ MEDIUM: 500-999 or 2501-3000 words (acceptable)
-- 🔴 HIGH: <300 words (thin content - critical issue)
-
-🖼️ IMAGES Priority:
-- ✅ LOW/Success: 0 missing alt texts (OPTIMAL)
-- ⚠️ MEDIUM: 1-3 missing alt texts (needs attention)
-- 🔴 HIGH: >3 missing alt texts or >50% without alt (critical accessibility issue)
-# AFTER LINE 745 - Add this section before "CRITICAL INSTRUCTIONS"
-
-🏷️ HEADING STRUCTURE ANALYSIS (CRITICAL!)
+📝 VERIFIED META DESCRIPTION DATA:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Current Heading Counts:
-- H1 Tags: {h1_count} (MUST be exactly 1)
-- H2 Tags: {h2_count} (Recommended: 3-6)
-- H3 Tags: {h3_count}
-- H4 Tags: {h4_count}
-- H5 Tags: {h5_count}
-- H6 Tags: {h6_count}
+Current Meta: "{scraped_data.get('meta_description', 'NOT SET')}"
+Current Length: {meta_length} characters (EXACT - DO NOT RECALCULATE)
+VERIFIED STATUS: {"✅ OPTIMAL - Do NOT add to seo_issues" if 150 <= meta_length <= 160 else ("⚠️ MEDIUM PRIORITY - MUST add to seo_issues as 'Meta Description'" if 120 <= meta_length < 150 or 161 <= meta_length <= 180 else "🔴 HIGH PRIORITY - MUST add to seo_issues as 'Meta Description'")}
 
-H1 Tag Content: {', '.join(scraped_data.get('h1_tags', [])) or 'MISSING ❌'}
-H2 Tag Samples: {', '.join(scraped_data.get('h2_tags', [])[:3]) or 'MISSING ❌'}
-
-🔴 CRITICAL H1/H2 PRIORITY RULES:
-- 🔴 HIGH PRIORITY if H1 count = 0 (Missing H1 is CRITICAL for SEO)
-- 🔴 HIGH PRIORITY if H1 count > 1 (Multiple H1s confuse search engines)
-- 🟡 MEDIUM PRIORITY if H2 count = 0 (No content structure)
-- 🟡 MEDIUM PRIORITY if H3 exists but H2 count = 0 (Invalid hierarchy)
-- 🟢 LOW PRIORITY if H2 count > 10 (Too many H2s may dilute focus)
-
-IMPORTANT: YOU MUST generate seo_issues for H1/H2 problems following the priority rules above!
+🏷️ VERIFIED HEADING STRUCTURE DATA:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+H1 Count: {h1_count} (EXACT - MUST be exactly 1)
+H2 Count: {h2_count} (EXACT - Recommended: 3-6)
+H3 Count: {h3_count}
+H4 Count: {h4_count}
+H5 Count: {h5_count}
+H6 Count: {h6_count}
+H1 Content: {', '.join(scraped_data.get('h1_tags', [])) or 'MISSING ❌'}
+H2 Samples: {', '.join(scraped_data.get('h2_tags', [])[:3]) or 'MISSING ❌'}
+VERIFIED STATUS: {"✅ OPTIMAL - Do NOT add to seo_issues" if h1_count == 1 and 3 <= h2_count <= 6 else ("⚠️ MEDIUM PRIORITY - MUST add to seo_issues as 'Headings'" if h1_count == 1 and (h2_count < 3 or h2_count > 6) else "🔴 HIGH PRIORITY - MUST add to seo_issues as 'Headings'")}
 
+🖼️ VERIFIED IMAGE ALT TEXT DATA:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total Images: {total_images} (EXACT)
+Missing Alt Text: {images_without_alt} images (EXACT - DO NOT RECALCULATE)
+VERIFIED STATUS: {"✅ PERFECT - Do NOT add to seo_issues (all images have alt)" if images_without_alt == 0 else ("⚠️ MEDIUM PRIORITY - MUST add to seo_issues as 'Images'" if 1 <= images_without_alt <= 3 else "🔴 HIGH PRIORITY - MUST add to seo_issues as 'Images'")}
+
+📄 VERIFIED CONTENT LENGTH DATA:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Current Word Count: {word_count} words (EXACT - DO NOT RECALCULATE)
+VERIFIED STATUS: {"✅ OPTIMAL - Do NOT add to seo_issues" if 1000 <= word_count <= 2500 else ("⚠️ MEDIUM PRIORITY - MUST add to seo_issues as 'Content'" if 500 <= word_count < 1000 or 2501 <= word_count <= 3000 else "🔴 HIGH PRIORITY - MUST add to seo_issues as 'Content'")}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 MANDATORY INSTRUCTION:
+You MUST use the EXACT numbers above in your analysis.
+If VERIFIED STATUS says:
+- "✅ OPTIMAL" or "✅ PERFECT" → Do NOT create issue
+- "⚠️ MEDIUM" or "🔴 HIGH" → MUST add to seo_issues with EXACT numbers
+
+NEVER recalculate or use different character counts, word counts, or image counts!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🔧 TECHNICAL SEO (ENHANCED!)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -845,7 +849,7 @@ IMPORTANT: YOU MUST generate seo_issues for H1/H2 problems following the priorit
 🔒 Security:
 - SSL/HTTPS: {'✓ Enabled' if technical_seo.get('ssl_enabled') else '❌ DISABLED (Critical!)'}
 
-📋 STRUCTURED DATA (NEW!)
+📋 STRUCTURED DATA:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Schema Markup Present: {'✓ YES' if schema_analysis.get('has_schema') else '✗ NO'}
 - Schema Types Found: {', '.join(schema_analysis.get('schema_types', [])) or 'None'}
@@ -854,7 +858,7 @@ IMPORTANT: YOU MUST generate seo_issues for H1/H2 problems following the priorit
 - Error Details: {'; '.join(schema_analysis.get('validation_issues', [])) or 'No errors'}
 - Recommendations: {'; '.join(schema_analysis.get('recommendations', [])) or 'None'}
 
-🔗 INTERNAL LINKING (NEW!)
+🔗 INTERNAL LINKING:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Total Links: {linking_analysis.get('total_links', 0)}
 - Internal Links: {linking_analysis.get('internal_count', 0)}
@@ -864,7 +868,7 @@ IMPORTANT: YOU MUST generate seo_issues for H1/H2 problems following the priorit
 - Empty Anchor Text: {linking_analysis.get('empty_anchor_count', 0)} links (Should be 0)
 - Issues: {'; '.join(linking_analysis.get('recommendations', [])) or 'No issues'}
 
-📱 SOCIAL & RICH SNIPPETS
+📱 SOCIAL & RICH SNIPPETS:
 - Open Graph Tags: {'✓ Present' if scraped_data.get('og_title') else '✗ Missing'}
 - OG Title: {scraped_data.get('og_title', 'Not set')}
 - OG Description: {scraped_data.get('og_description', 'Not set')}
@@ -874,12 +878,13 @@ CRITICAL INSTRUCTIONS:
 You MUST provide DETAILED, SPECIFIC recommendations following this format.
 
 For each recommendation, include:
-1. ❌ Current State: [exact current value with numbers]
+1. ❌ Current State: [exact VERIFIED value with numbers from above]
 2. ✅ Target State: [specific target with numbers]
 3. 📋 Example: '[ready-to-use example that can be directly implemented]'
 4. 📈 Impact: [measurable expected improvement like "+15-20% CTR" or "+50 monthly visitors"]
 
 Pay special attention to:
+- Use EXACT VERIFIED numbers (title_length={title_length}, meta_length={meta_length}, images_without_alt={images_without_alt}, word_count={word_count})
 - Canonical tag issues (if any are present)
 - Missing or invalid structured data
 - Internal linking problems (low ratio, nofollow on internal links, empty anchors)
@@ -894,9 +899,9 @@ Provide analysis in this EXACT JSON format:
   "seo_issues": [
     {{
       "priority": "High|Medium|Low",
-      "category": "Title Tag|Meta Description|Content|Images|Technical SEO|Structured Data|Internal Linking|Canonical|Security",
-      "issue": "<specific issue with current metric>",
-      "recommendation": "CURRENT: [exact current state with numbers]\\\\nTARGET: [specific target with numbers]\\\\nEXAMPLE: '[ready-to-use optimized text]'\\\\nIMPACT: [measurable improvement estimate]"
+      "category": "Title Tag|Meta Description|Headings|Images|Content|Technical SEO|Structured Data|Internal Linking|Canonical|Security",
+      "issue": "<specific issue with current metric using EXACT VERIFIED numbers>",
+      "recommendation": "CURRENT: [exact VERIFIED state with numbers]\\\\\\\\\\\\\\\\nTARGET: [specific target with numbers]\\\\\\\\\\\\\\\\nEXAMPLE: '[ready-to-use optimized text]'\\\\\\\\\\\\\\\\nIMPACT: [measurable improvement estimate]"
     }}
   ],
   "keyword_strategy": {{
@@ -952,12 +957,15 @@ Provide analysis in this EXACT JSON format:
 }}
 
 REMEMBER - EVERY recommendation must include:
-✓ Exact current numbers
+✓ Exact VERIFIED numbers from data above (never recalculate!)
 ✓ Specific target numbers  
 ✓ Ready-to-use examples
 ✓ Measurable impact estimates
 
+⚠️ FINAL WARNING: Use ONLY the VERIFIED DATA. Title={title_length} chars, Meta={meta_length} chars, Images missing={images_without_alt}, Words={word_count}. Any different numbers = hallucination!
+
 Be professional, specific, and client-ready. Focus on high-impact optimizations, especially the new technical SEO findings (canonical, schema, internal links)."""
+
 
     try:
         openai_client = AsyncOpenAI(api_key=api_key)
