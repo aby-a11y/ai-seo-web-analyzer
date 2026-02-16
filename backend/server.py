@@ -870,6 +870,24 @@ IMPORTANT: YOU MUST generate seo_issues for H1/H2 problems following the priorit
 - OG Description: {scraped_data.get('og_description', 'Not set')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+🚨 CRITICAL INSTRUCTION - READ CAREFULLY:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+You MUST generate seo_issues for ALL 5 MANDATORY BASIC SEO CHECKS above:
+1. Title Tag (if not 50-60 chars optimal)
+2. Meta Description (if not 150-160 chars optimal)
+3. Headings (if H1≠1 or H2=0 or H2>10)
+4. Image Alt Text (if any missing)
+5. Content Length (if <1000 words)
+
+For EACH issue, use exact category names: "Title Tag", "Meta Description", "Headings", "Images", "Content"
+
+Then add ADDITIONAL issues for:
+- Technical SEO (canonical, robots, sitemap, SSL)
+- Structured Data (if missing)
+- Internal Linking (if ratio < 70%)
+- Any other problems found
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 CRITICAL INSTRUCTIONS:
 You MUST provide DETAILED, SPECIFIC recommendations following this format.
 
@@ -894,9 +912,9 @@ Provide analysis in this EXACT JSON format:
   "seo_issues": [
     {{
       "priority": "High|Medium|Low",
-      "category": "Title Tag|Meta Description|Content|Images|Technical SEO|Structured Data|Internal Linking|Canonical|Security",
+      "category": "Title Tag|Meta Description|Headings|Images|Content|Technical SEO|Structured Data|Internal Linking|Canonical|Security",
       "issue": "<specific issue with current metric>",
-      "recommendation": "CURRENT: [exact current state with numbers]\\\\nTARGET: [specific target with numbers]\\\\nEXAMPLE: '[ready-to-use optimized text]'\\\\nIMPACT: [measurable improvement estimate]"
+      "recommendation": "CURRENT: [exact current state with numbers]\\\\\\\\nTARGET: [specific target with numbers]\\\\\\\\nEXAMPLE: '[ready-to-use optimized text]'\\\\\\\\nIMPACT: [measurable improvement estimate]"
     }}
   ],
   "keyword_strategy": {{
@@ -957,7 +975,10 @@ REMEMBER - EVERY recommendation must include:
 ✓ Ready-to-use examples
 ✓ Measurable impact estimates
 
+⚠️ MANDATORY: Basic SEO issues (Title, Meta, Headings, Images, Content) MUST appear in seo_issues if they have problems!
+
 Be professional, specific, and client-ready. Focus on high-impact optimizations, especially the new technical SEO findings (canonical, schema, internal links)."""
+
 
     try:
         openai_client = AsyncOpenAI(api_key=api_key)
