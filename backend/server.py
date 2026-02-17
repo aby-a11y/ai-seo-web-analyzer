@@ -363,17 +363,14 @@ def check_performance(response_obj):
         "css_count": len(links_css),
         "image_count": len(imgs),
     }
-    
     def calculate_readability(text: str) -> Dict[str, Any]:
       "Calculate multiple readability metrics"""
     try:
         import textstat
         from bs4 import BeautifulSoup
         
-        # Remove HTML tags
         clean_text = BeautifulSoup(text, 'html.parser').get_text()
         clean_text = ' '.join(clean_text.split())
-        
         flesch_score = textstat.flesch_reading_ease(clean_text)
         
         return {
@@ -416,6 +413,7 @@ def analyze_keyword_density(text: str, title: str = "", meta_desc: str = "", top
             nltk.download('stopwords', quiet=True)
             stop_words = set(stopwords.words('english'))
         
+        from bs4 import BeautifulSoup
         clean_text = BeautifulSoup(text, 'html.parser').get_text().lower()
         clean_text = re.sub(r'[^\w\s]', ' ', clean_text)
         words = [w for w in clean_text.split() if len(w) >= 3]
@@ -490,10 +488,7 @@ def generate_keyword_recommendations(keywords: list, diversity: float, stuffing_
     if not recommendations:
         recommendations.append("✅ Keyword usage looks good")
     return recommendations
-
-
-
-
+    
 async def analyze_page_speed(url: str, response_obj: httpx.Response, soup: BeautifulSoup) -> Dict[str, Any]:
     """Comprehensive page load speed and performance analysis"""
     import time
