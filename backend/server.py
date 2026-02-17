@@ -363,9 +363,12 @@ def check_performance(response_obj):
         "css_count": len(links_css),
         "image_count": len(imgs),
     }
-    def calculate_readability(text: str) -> Dict[str, Any]:
-      "Calculate multiple readability metrics"""
+  
+  
+def calculate_readability(text: str) -> Dict[str, Any]:
+    """Calculate multiple readability metrics"""
     try:
+
         import textstat
         from bs4 import BeautifulSoup
         
