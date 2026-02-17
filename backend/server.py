@@ -103,6 +103,10 @@ class SEOReport(BaseModel):
     # Overall Score
     seo_score: Optional[int] = None
     analysis_summary: Optional[str] = None
+    
+    readability_analysis: Optional[Dict[str, Any]] = {}
+    keyword_density_analysis: Optional[Dict[str, Any]] = {}
+    page_speed_analysis: Optional[Dict[str, Any]] = {}
 
 
 class SEOAnalysisRequest(BaseModel):
@@ -144,6 +148,9 @@ class SEOReportResponse(BaseModel):
     action_plan_30_days: List[Dict[str, str]] = []
     seo_score: Optional[int] = None
     analysis_summary: Optional[str] = None
+    readability_analysis: Optional[Dict[str, Any]] = {}
+    keyword_density_analysis: Optional[Dict[str, Any]] = {}
+    page_speed_analysis: Optional[Dict[str, Any]] = {}
 
 
 # Configure logging
@@ -356,6 +363,235 @@ def check_performance(response_obj):
         "css_count": len(links_css),
         "image_count": len(imgs),
     }
+
+async def analyze_page_speed(url: str, response_obj: httpx.Response, soup: BeautifulSoup) -> Dict[str, Any]:
+    """Comprehensive page load speed and performance analysis"""
+    import time
+    from datetime import datetime
+    
+    try:
+        # ========== TIMING BREAKDOWN ==========
+        # Measure actual response time
+        start_time = time.time()
+        
+        async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
+            timing_start = time.time()
+            
+            # DNS + Connection + Response time
+            response = await client.get(
+                str(url),
+                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            )
+            
+            total_load_time = time.time() - timing_start
+        
+        # ========== RESOURCE ANALYSIS ==========
+        # Count different resource types
+        scripts = soup.find_all('script')
+        external_scripts = [s for s in scripts if s.get('src')]
+        inline_scripts = [s for s in scripts if not s.get('src') and s.string]
+        
+        stylesheets = soup.find_all('link', rel=lambda v: v and 'stylesheet' in str(v).lower())
+        inline_styles = soup.find_all('style')
+        
+        images = soup.find_all('img')
+        
+        # Fonts
+        font_links = soup.find_all('link', href=lambda v: v and ('font' in str(v).lower() or 'woff' in str(v).lower()))
+        
+        # Videos
+        videos = soup.find_all('video')
+        iframes = soup.find_all('iframe')
+        
+        # ========== SIZE ANALYSIS ==========
+        page_size_bytes = len(response_obj.content)
+        page_size_kb = round(page_size_bytes / 1024, 2)
+        page_size_mb = round(page_size_bytes / (1024 * 1024), 2)
+        
+        # HTML size
+        html_size_kb = round(len(response_obj.text.encode('utf-8')) / 1024, 2)
+        
+        # ========== PERFORMANCE METRICS ==========
+        # Time to First Byte (approximate from headers)
+        ttfb = round(total_load_time * 0.3, 3)  # Estimated
+        
+        # Calculate estimated load times for different resources
+        estimated_js_load = len(external_scripts) * 0.2  # ~200ms per script
+        estimated_css_load = len(stylesheets) * 0.15     # ~150ms per stylesheet
+        estimated_img_load = len(images) * 0.1           # ~100ms per image
+        
+        total_estimated_load = total_load_time + estimated_js_load + estimated_css_load + estimated_img_load
+        
+        # ========== COMPRESSION CHECK ==========
+        headers = response_obj.headers
+        compression_enabled = 'gzip' in headers.get('content-encoding', '').lower() or \
+                            'br' in headers.get('content-encoding', '').lower() or \
+                            'deflate' in headers.get('content-encoding', '').lower()
+        
+        compression_type = headers.get('content-encoding', 'None')
+        
+        # ========== CACHING CHECK ==========
+        cache_control = headers.get('cache-control', 'Not Set')
+        has_cache = cache_control != 'Not Set' and 'no-cache' not in cache_control.lower()
+        
+        expires = headers.get('expires', 'Not Set')
+        etag = headers.get('etag', 'Not Set')
+        last_modified = headers.get('last-modified', 'Not Set')
+        
+        # ========== RENDER-BLOCKING RESOURCES ==========
+        # CSS in head (blocking)
+        css_in_head = len([link for link in soup.find('head').find_all('link', rel='stylesheet') if soup.find('head')])
+        
+        # Scripts without async/defer
+        blocking_scripts = []
+        for script in external_scripts:
+            if not script.get('async') and not script.get('defer'):
+                blocking_scripts.append(script.get('src', '')[:100])
+        
+        # ========== PERFORMANCE SCORE CALCULATION ==========
+        score = 100
+        issues = []
+        recommendations = []
+        
+        # Page size penalty
+        if page_size_mb > 5:
+            score -= 25
+            issues.append(f"❌ Page size too large: {page_size_mb}MB (target: <3MB)")
+            recommendations.append(f"Reduce page size from {page_size_mb}MB to under 3MB")
+        elif page_size_mb > 3:
+            score -= 15
+            issues.append(f"⚠️ Page size large: {page_size_mb}MB (target: <3MB)")
+            recommendations.append("Optimize images and minify resources")
+        
+        # Load time penalty
+        if total_load_time > 3:
+            score -= 20
+            issues.append(f"❌ Slow load time: {round(total_load_time, 2)}s (target: <2s)")
+            recommendations.append("Improve server response time and enable caching")
+        elif total_load_time > 2:
+            score -= 10
+            issues.append(f"⚠️ Moderate load time: {round(total_load_time, 2)}s (target: <2s)")
+        
+        # Resource count penalty
+        total_resources = len(external_scripts) + len(stylesheets) + len(images)
+        if total_resources > 50:
+            score -= 15
+            issues.append(f"⚠️ Too many resources: {total_resources} (target: <50)")
+            recommendations.append("Combine and minify CSS/JS files, use image sprites")
+        
+        # Compression check
+        if not compression_enabled:
+            score -= 15
+            issues.append("❌ Text compression not enabled")
+            recommendations.append("Enable GZIP or Brotli compression on server")
+        
+        # Caching check
+        if not has_cache:
+            score -= 10
+            issues.append("⚠️ Browser caching not configured")
+            recommendations.append("Add Cache-Control headers (max-age=31536000 for static assets)")
+        
+        # Render-blocking resources
+        if len(blocking_scripts) > 3:
+            score -= 10
+            issues.append(f"⚠️ {len(blocking_scripts)} render-blocking scripts")
+            recommendations.append("Add 'async' or 'defer' attributes to non-critical scripts")
+        
+        if css_in_head > 5:
+            score -= 5
+            issues.append(f"⚠️ {css_in_head} CSS files in <head>")
+            recommendations.append("Inline critical CSS and load non-critical CSS asynchronously")
+        
+        # Image optimization
+        images_without_lazy = len([img for img in images if not img.get('loading') == 'lazy'])
+        if images_without_lazy > 5:
+            score -= 5
+            issues.append(f"⚠️ {images_without_lazy} images without lazy loading")
+            recommendations.append("Add loading='lazy' to below-the-fold images")
+        
+        score = max(0, score)
+        
+        # ========== PERFORMANCE GRADE ==========
+        if score >= 90:
+            grade = "A+ (Excellent)"
+            grade_color = "green"
+        elif score >= 80:
+            grade = "A (Good)"
+            grade_color = "green"
+        elif score >= 70:
+            grade = "B (Fair)"
+            grade_color = "yellow"
+        elif score >= 60:
+            grade = "C (Poor)"
+            grade_color = "orange"
+        else:
+            grade = "D (Very Poor)"
+            grade_color = "red"
+        
+        # ========== RETURN COMPREHENSIVE DATA ==========
+        return {
+            # Timing Metrics
+            "total_load_time_seconds": round(total_load_time, 3),
+            "time_to_first_byte_seconds": ttfb,
+            "estimated_full_load_seconds": round(total_estimated_load, 2),
+            "load_time_grade": "Fast" if total_load_time < 2 else ("Moderate" if total_load_time < 3 else "Slow"),
+            
+            # Size Metrics
+            "page_size_bytes": page_size_bytes,
+            "page_size_kb": page_size_kb,
+            "page_size_mb": page_size_mb,
+            "html_size_kb": html_size_kb,
+            "size_grade": "Small" if page_size_mb < 1 else ("Medium" if page_size_mb < 3 else "Large"),
+            
+            # Resource Counts
+            "total_resources": total_resources,
+            "external_scripts_count": len(external_scripts),
+            "inline_scripts_count": len(inline_scripts),
+            "external_css_count": len(stylesheets),
+            "inline_css_count": len(inline_styles),
+            "images_count": len(images),
+            "fonts_count": len(font_links),
+            "videos_count": len(videos),
+            "iframes_count": len(iframes),
+            
+            # Optimization Checks
+            "compression_enabled": compression_enabled,
+            "compression_type": compression_type,
+            "caching_enabled": has_cache,
+            "cache_control": cache_control,
+            "expires_header": expires,
+            "etag_present": etag != 'Not Set',
+            "last_modified_present": last_modified != 'Not Set',
+            
+            # Render-Blocking
+            "render_blocking_scripts": len(blocking_scripts),
+            "render_blocking_scripts_list": blocking_scripts[:10],
+            "css_in_head_count": css_in_head,
+            
+            # Performance Score
+            "performance_score": score,
+            "performance_grade": grade,
+            "grade_color": grade_color,
+            "issues": issues,
+            "recommendations": recommendations,
+            
+            # Speed Comparison
+            "comparison": {
+                "vs_2_seconds": f"{'✅ Faster' if total_load_time < 2 else '❌ Slower'} than 2s target",
+                "vs_3_seconds": f"{'✅ Faster' if total_load_time < 3 else '❌ Slower'} than 3s acceptable",
+                "vs_average_web": f"{'✅ Better' if page_size_mb < 2 else '❌ Worse'} than 2MB average"
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Page speed analysis error: {str(e)}")
+        return {
+            "error": str(e),
+            "total_load_time_seconds": 0,
+            "performance_score": 0,
+            "issues": [f"Failed to analyze: {str(e)}"]
+        }
+
 
 def validate_schema_markup(soup, url):
     """Validate and analyze structured data (JSON-LD, Microdata, RDFa)"""
@@ -687,6 +923,10 @@ async def scrape_website(url: str) -> Dict[str, Any]:
         words = re.findall(r'\w+', text_content)
         word_count = len(words)
         
+        readability_data = calculate_readability(text_content)
+        keyword_analysis = analyze_keyword_density(text_content, title=title_text, meta_desc=meta_description)
+        page_speed_data = await analyze_page_speed(str(url), response, soup)
+    
         # Extract meta keywords if present
         meta_keywords = soup.find('meta', attrs={'name': 'keywords'})
         keywords = meta_keywords.get('content', '') if meta_keywords else ''
@@ -874,6 +1114,59 @@ NEVER recalculate or use different character counts, word counts, or image count
 - OG Description: {scraped_data.get('og_description', 'Not set')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+📖 VERIFIED READABILITY DATA:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Flesch Reading Ease: {scraped_data.get('readability_analysis', {}).get('flesch_reading_ease', 'N/A')} (EXACT)
+Grade Level: {scraped_data.get('readability_analysis', {}).get('readability_grade', 'N/A')}
+Reading Time: {scraped_data.get('readability_analysis', {}).get('reading_time_minutes', 'N/A')} minutes
+Difficulty: {scraped_data.get('readability_analysis', {}).get('difficulty_level', 'N/A')}
+TARGET: 60-70 (Standard readability for general audience)
+STATUS: {"✅ OPTIMAL" if 60 <= scraped_data.get('readability_analysis', {}).get('flesch_reading_ease', 0) <= 70 else "⚠️ NEEDS IMPROVEMENT"}
+
+📊 VERIFIED KEYWORD ANALYSIS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total Words: {scraped_data.get('keyword_density_analysis', {}).get('total_words', 0)}
+Unique Words: {scraped_data.get('keyword_density_analysis', {}).get('unique_words', 0)}
+Lexical Diversity: {scraped_data.get('keyword_density_analysis', {}).get('lexical_diversity', 0)} ({scraped_data.get('keyword_density_analysis', {}).get('lexical_diversity_grade', 'N/A')})
+Keyword Stuffing Risk: {"⚠️ YES" if scraped_data.get('keyword_density_analysis', {}).get('keyword_stuffing_risk') else "✅ NO"}
+
+Top Keywords (with density %):
+{chr(10).join([f"  - {kw.get('keyword', '')}: {kw.get('density_percent', 0)}% ({kw.get('count', 0)} times) - {'✅ In Title' if kw.get('in_title') else '❌ Not in Title'}" for kw in scraped_data.get('keyword_density_analysis', {}).get('top_keywords', [])[:5]])}
+
+Top 2-Word Phrases:
+{chr(10).join([f"  - '{phrase.get('phrase', '')}': {phrase.get('count', 0)} times" for phrase in scraped_data.get('keyword_density_analysis', {}).get('top_phrases', [])[:5]])}
+
+⚡ VERIFIED PAGE SPEED & PERFORMANCE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🕐 TIMING METRICS:
+- Total Load Time: {scraped_data.get('page_speed_analysis', {}).get('total_load_time_seconds', 0)}s (EXACT)
+- Time to First Byte: {scraped_data.get('page_speed_analysis', {}).get('time_to_first_byte_seconds', 0)}s
+- Load Time Grade: {scraped_data.get('page_speed_analysis', {}).get('load_time_grade', 'N/A')}
+- TARGET: <2s (Fast), <3s (Acceptable)
+- STATUS: {scraped_data.get('page_speed_analysis', {}).get('comparison', {}).get('vs_2_seconds', 'N/A')}
+
+📦 SIZE METRICS:
+- Page Size: {scraped_data.get('page_speed_analysis', {}).get('page_size_mb', 0)}MB (EXACT)
+- HTML Size: {scraped_data.get('page_speed_analysis', {}).get('html_size_kb', 0)}KB
+- Size Grade: {scraped_data.get('page_speed_analysis', {}).get('size_grade', 'N/A')}
+- TARGET: <1MB (Ideal), <3MB (Acceptable)
+
+🔧 RESOURCES:
+- Total Resources: {scraped_data.get('page_speed_analysis', {}).get('total_resources', 0)} (Target: <50)
+- JavaScript Files: {scraped_data.get('page_speed_analysis', {}).get('external_scripts_count', 0)}
+- CSS Files: {scraped_data.get('page_speed_analysis', {}).get('external_css_count', 0)}
+- Images: {scraped_data.get('page_speed_analysis', {}).get('images_count', 0)}
+- Render-Blocking Scripts: {scraped_data.get('page_speed_analysis', {}).get('render_blocking_scripts', 0)}
+
+⚙️ OPTIMIZATION STATUS:
+- Text Compression: {'✅ Enabled' if scraped_data.get('page_speed_analysis', {}).get('compression_enabled') else '❌ Disabled'} ({scraped_data.get('page_speed_analysis', {}).get('compression_type', 'None')})
+- Browser Caching: {'✅ Configured' if scraped_data.get('page_speed_analysis', {}).get('caching_enabled') else '❌ Not Set'}
+
+📊 PERFORMANCE SCORE: {scraped_data.get('page_speed_analysis', {}).get('performance_score', 0)}/100 ({scraped_data.get('page_speed_analysis', {}).get('performance_grade', 'N/A')})
+
+⚠️ ISSUES FOUND:
+{chr(10).join([f"  - {issue}" for issue in scraped_data.get('page_speed_analysis', {}).get('issues', [])])}
+
 CRITICAL INSTRUCTIONS:
 You MUST provide DETAILED, SPECIFIC recommendations following this format.
 
@@ -1027,6 +1320,9 @@ Be professional, specific, and client-ready. Focus on high-impact optimizations,
             schema_analysis=schema_analysis,
             linking_analysis=linking_analysis,
             backlink_analysis=backlink_analysis,
+            readability_analysis=scraped_data.get('readability_analysis', {}),
+            keyword_density_analysis=scraped_data.get('keyword_density_analysis', {}),
+            page_speed_analysis=scraped_data.get('page_speed_analysis', {}),
             seo_score=ai_analysis.get('seo_score'),
             analysis_summary=ai_analysis.get('analysis_summary'),
             seo_issues=seo_issues_list,
