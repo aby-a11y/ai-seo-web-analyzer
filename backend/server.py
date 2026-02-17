@@ -363,8 +363,9 @@ def check_performance(response_obj):
         "css_count": len(links_css),
         "image_count": len(imgs),
     }
+    
     def calculate_readability(text: str) -> Dict[str, Any]:
-    """Calculate multiple readability metrics"""
+      "Calculate multiple readability metrics"""
     try:
         import textstat
         from bs4 import BeautifulSoup
@@ -415,7 +416,6 @@ def analyze_keyword_density(text: str, title: str = "", meta_desc: str = "", top
             nltk.download('stopwords', quiet=True)
             stop_words = set(stopwords.words('english'))
         
-        from bs4 import BeautifulSoup
         clean_text = BeautifulSoup(text, 'html.parser').get_text().lower()
         clean_text = re.sub(r'[^\w\s]', ' ', clean_text)
         words = [w for w in clean_text.split() if len(w) >= 3]
@@ -472,7 +472,6 @@ def analyze_keyword_density(text: str, title: str = "", meta_desc: str = "", top
             "overused_keywords": overused,
             "recommendations": generate_keyword_recommendations(keyword_data, lexical_diversity, stuffing_risk)
         }
-   
     except Exception as e:
         logger.error(f"Keyword density error: {str(e)}")
         return {"error": str(e), "total_words": 0, "top_keywords": [], "top_phrases": []}
@@ -491,6 +490,8 @@ def generate_keyword_recommendations(keywords: list, diversity: float, stuffing_
     if not recommendations:
         recommendations.append("✅ Keyword usage looks good")
     return recommendations
+
+
 
 
 async def analyze_page_speed(url: str, response_obj: httpx.Response, soup: BeautifulSoup) -> Dict[str, Any]:
