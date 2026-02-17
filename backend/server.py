@@ -1108,6 +1108,9 @@ async def scrape_website(url: str) -> Dict[str, Any]:
              'backlink_analysis': backlink_analysis, 
              'external_links_count': backlink_analysis['total_external_links'],
              'link_quality_score': backlink_analysis['link_quality_score'],
+             'readability_analysis': readability_data,
+             'keyword_density_analysis': keyword_analysis,
+             'page_speed_analysis': page_speed_data,
         }
         
     except Exception as e:
