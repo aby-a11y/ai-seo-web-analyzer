@@ -363,6 +363,135 @@ def check_performance(response_obj):
         "css_count": len(links_css),
         "image_count": len(imgs),
     }
+    def calculate_readability(text: str) -> Dict[str, Any]:
+    """Calculate multiple readability metrics"""
+    try:
+        import textstat
+        from bs4 import BeautifulSoup
+        
+        # Remove HTML tags
+        clean_text = BeautifulSoup(text, 'html.parser').get_text()
+        clean_text = ' '.join(clean_text.split())
+        
+        flesch_score = textstat.flesch_reading_ease(clean_text)
+        
+        return {
+            "flesch_reading_ease": round(flesch_score, 1),
+            "flesch_kincaid_grade": round(textstat.flesch_kincaid_grade(clean_text), 1),
+            "gunning_fog": round(textstat.gunning_fog(clean_text), 1),
+            "reading_time_minutes": round(textstat.reading_time(clean_text, ms_per_char=14.69) / 60, 1),
+            "readability_grade": get_readability_grade(flesch_score),
+            "difficulty_level": get_difficulty_level(flesch_score)
+        }
+    except Exception as e:
+        logger.error(f"Readability error: {str(e)}")
+        return {"flesch_reading_ease": 0, "readability_grade": "Unable to calculate", "difficulty_level": "error"}
+
+def get_readability_grade(score: float) -> str:
+    if score >= 90: return "Very Easy (5th grade)"
+    elif score >= 80: return "Easy (6th grade)"
+    elif score >= 70: return "Fairly Easy (7th-8th grade)"
+    elif score >= 60: return "Standard (8th-9th grade)"
+    elif score >= 50: return "Fairly Difficult (10th-12th grade)"
+    elif score >= 30: return "Difficult (College level)"
+    else: return "Very Difficult (Professional)"
+
+def get_difficulty_level(score: float) -> str:
+    if score >= 70: return "easy"
+    elif score >= 50: return "medium"
+    else: return "hard"
+
+def analyze_keyword_density(text: str, title: str = "", meta_desc: str = "", top_n: int = 15) -> Dict[str, Any]:
+    """Analyze keyword density"""
+    try:
+        from collections import Counter
+        import re
+        from nltk.corpus import stopwords
+        import nltk
+        
+        try:
+            stop_words = set(stopwords.words('english'))
+        except LookupError:
+            nltk.download('stopwords', quiet=True)
+            stop_words = set(stopwords.words('english'))
+        
+        from bs4 import BeautifulSoup
+        clean_text = BeautifulSoup(text, 'html.parser').get_text().lower()
+        clean_text = re.sub(r'[^\w\s]', ' ', clean_text)
+        words = [w for w in clean_text.split() if len(w) >= 3]
+        filtered_words = [w for w in words if w not in stop_words and w.isalpha()]
+        
+        if not filtered_words:
+            return {"error": "No content", "total_words": 0, "top_keywords": [], "top_phrases": []}
+        
+        total_words = len(filtered_words)
+        word_freq = Counter(filtered_words)
+        
+        keyword_data = []
+        for word, count in word_freq.most_common(top_n):
+            density = round((count / total_words) * 100, 2)
+            in_title = word in title.lower() if title else False
+            in_meta = word in meta_desc.lower() if meta_desc else False
+            status = "⚠️ Overused" if density > 3 else ("✅ Good" if density >= 0.5 else "Low")
+            
+            keyword_data.append({
+                "keyword": word,
+                "count": count,
+                "density_percent": density,
+                "in_title": in_title,
+                "in_meta_description": in_meta,
+                "status": status
+            })
+        
+        bigrams = []
+        for i in range(len(words) - 1):
+            if words[i] not in stop_words and words[i+1] not in stop_words:
+                phrase = f"{words[i]} {words[i+1]}"
+                if len(phrase) >= 6:
+                    bigrams.append(phrase)
+        
+        bigram_freq = Counter(bigrams)
+        top_phrases = []
+        for phrase, count in bigram_freq.most_common(10):
+            if count >= 2:
+                density = round((count / (len(bigrams) if bigrams else 1)) * 100, 2)
+                top_phrases.append({"phrase": phrase, "count": count, "density_percent": density})
+        
+        overused = [kw for kw in keyword_data if kw['density_percent'] > 3]
+        stuffing_risk = len(overused) > 0
+        lexical_diversity = round(len(word_freq) / total_words, 3) if total_words > 0 else 0
+        
+        return {
+            "total_words": total_words,
+            "unique_words": len(word_freq),
+            "lexical_diversity": lexical_diversity,
+            "lexical_diversity_grade": "Rich" if lexical_diversity > 0.5 else ("Average" if lexical_diversity > 0.3 else "Poor"),
+            "top_keywords": keyword_data,
+            "top_phrases": top_phrases,
+            "keyword_stuffing_risk": stuffing_risk,
+            "overused_keywords": overused,
+            "recommendations": generate_keyword_recommendations(keyword_data, lexical_diversity, stuffing_risk)
+        }
+   
+    except Exception as e:
+        logger.error(f"Keyword density error: {str(e)}")
+        return {"error": str(e), "total_words": 0, "top_keywords": [], "top_phrases": []}
+
+def generate_keyword_recommendations(keywords: list, diversity: float, stuffing_risk: bool) -> list:
+    recommendations = []
+    if stuffing_risk:
+        recommendations.append("⚠️ Keyword stuffing detected - Reduce overused keywords")
+    if diversity < 0.3:
+        recommendations.append("💡 Low lexical diversity - Use more varied vocabulary")
+    top_keywords = keywords[:3]
+    if len([kw for kw in top_keywords if kw.get('in_title')]) == 0:
+        recommendations.append("⚠️ Top keywords not in title - Add primary keyword to title tag")
+    if len([kw for kw in top_keywords if kw.get('in_meta_description')]) == 0:
+        recommendations.append("⚠️ Top keywords not in meta description - Include primary keyword")
+    if not recommendations:
+        recommendations.append("✅ Keyword usage looks good")
+    return recommendations
+
 
 async def analyze_page_speed(url: str, response_obj: httpx.Response, soup: BeautifulSoup) -> Dict[str, Any]:
     """Comprehensive page load speed and performance analysis"""
