@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -90,7 +89,7 @@ const ReportPage = () => {
 
   return (
     
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+ <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
 
 
       <div className="bg-white shadow-sm sticky top-0 z-50">
@@ -231,6 +230,7 @@ const ReportPage = () => {
       ))}
     </div>
   </div>
+  
 )}
 
         {/* ========== SECTION 1: BASIC SEO ========== */}
@@ -375,92 +375,161 @@ const ReportPage = () => {
             <p className="text-2xl font-bold text-gray-900">{report.h1_tags[0]}</p>
           </div>
         )}
-        {/* H2-H6 Heading Structure */}
+                {/* H2-H6 Heading Structure - COLLAPSIBLE */}
         <div className="mt-6">
           <p className="text-lg font-semibold text-gray-900 mb-4">Heading Hierarchy (H2-H6)</p>
 
-          {/* H2 Tags */}
+          {/* H2 Tags - COLLAPSIBLE */}
           {report.h2_tags && report.h2_tags.length > 0 && (
             <div className="mb-4">
-              <p className="text-sm font-medium text-gray-600 mb-2">
-                H2 Tags ({report.h2_tags.length})
-              </p>
-              <div className="space-y-2">
-                {report.h2_tags.map((h2, idx) => (
-                  <p key={idx} className="text-base font-semibold text-gray-800 bg-gray-50 p-2 rounded pl-4">
-                    {h2}
-                  </p>
-                ))}
-              </div>
+              <button
+                onClick={() => setExpandedSection(expandedSection === 'h2' ? null : 'h2')}
+                className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 hover:from-indigo-100 hover:to-indigo-200 rounded-lg border border-indigo-200 transition-all"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm font-bold text-indigo-900">H2 Tags</span>
+                  <span className="px-3 py-1 bg-indigo-600 text-white rounded-full text-xs font-bold">
+                    {report.h2_tags.length}
+                  </span>
+                </div>
+                <div className={`text-2xl font-bold text-indigo-600 transition-transform ${expandedSection === 'h2' ? 'rotate-45' : ''}`}>
+                  +
+                </div>
+              </button>
+              
+              {expandedSection === 'h2' && (
+                <div className="mt-3 space-y-2 animate-slideDown">
+                  {report.h2_tags.map((h2, idx) => (
+                    <div key={idx} className="text-base font-semibold text-gray-800 bg-gray-50 p-3 rounded pl-4 border-l-4 border-indigo-500">
+                      {h2}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* H3 Tags */}
+          {/* H3 Tags - COLLAPSIBLE */}
           {report.h3_tags && report.h3_tags.length > 0 && (
             <div className="mb-4">
-              <p className="text-sm font-medium text-gray-600 mb-2">
-                H3 Tags ({report.h3_tags.length})
-              </p>
-              <div className="space-y-2">
-                {report.h3_tags.map((h3, idx) => (
-                  <p key={idx} className="text-sm text-gray-700 bg-gray-50 p-2 rounded pl-6">
-                    {h3}
-                  </p>
-                ))}
-              </div>
+              <button
+                onClick={() => setExpandedSection(expandedSection === 'h3' ? null : 'h3')}
+                className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-lg border border-purple-200 transition-all"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm font-bold text-purple-900">H3 Tags</span>
+                  <span className="px-3 py-1 bg-purple-600 text-white rounded-full text-xs font-bold">
+                    {report.h3_tags.length}
+                  </span>
+                </div>
+                <div className={`text-2xl font-bold text-purple-600 transition-transform ${expandedSection === 'h3' ? 'rotate-45' : ''}`}>
+                  +
+                </div>
+              </button>
+              
+              {expandedSection === 'h3' && (
+                <div className="mt-3 space-y-2 animate-slideDown">
+                  {report.h3_tags.map((h3, idx) => (
+                    <div key={idx} className="text-sm text-gray-700 bg-gray-50 p-3 rounded pl-6 border-l-4 border-purple-500">
+                      {h3}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* H4 Tags */}
+          {/* H4 Tags - COLLAPSIBLE */}
           {report.h4_tags && report.h4_tags.length > 0 && (
             <div className="mb-4">
-              <p className="text-sm font-medium text-gray-600 mb-2">
-                H4 Tags ({report.h4_tags.length})
-              </p>
-              <div className="space-y-2">
-                {report.h4_tags.map((h4, idx) => (
-                  <p key={idx} className="text-sm text-gray-700 bg-gray-50 p-2 rounded pl-8">
-                    {h4}
-                  </p>
-                ))}
-              </div>
+              <button
+                onClick={() => setExpandedSection(expandedSection === 'h4' ? null : 'h4')}
+                className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 transition-all"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm font-bold text-blue-900">H4 Tags</span>
+                  <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-bold">
+                    {report.h4_tags.length}
+                  </span>
+                </div>
+                <div className={`text-2xl font-bold text-blue-600 transition-transform ${expandedSection === 'h4' ? 'rotate-45' : ''}`}>
+                  +
+                </div>
+              </button>
+              
+              {expandedSection === 'h4' && (
+                <div className="mt-3 space-y-2 animate-slideDown">
+                  {report.h4_tags.map((h4, idx) => (
+                    <div key={idx} className="text-sm text-gray-700 bg-gray-50 p-3 rounded pl-8 border-l-4 border-blue-500">
+                      {h4}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* H5 Tags */}
+          {/* H5 Tags - COLLAPSIBLE */}
           {report.h5_tags && report.h5_tags.length > 0 && (
             <div className="mb-4">
-              <p className="text-sm font-medium text-gray-600 mb-2">
-                H5 Tags ({report.h5_tags.length})
-              </p>
-              <div className="space-y-2">
-                {report.h5_tags.map((h5, idx) => (
-                  <p key={idx} className="text-sm text-gray-700 bg-gray-50 p-2 rounded pl-10">
-                    {h5}
-                  </p>
-                ))}
-              </div>
+              <button
+                onClick={() => setExpandedSection(expandedSection === 'h5' ? null : 'h5')}
+                className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-lg border border-green-200 transition-all"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm font-bold text-green-900">H5 Tags</span>
+                  <span className="px-3 py-1 bg-green-600 text-white rounded-full text-xs font-bold">
+                    {report.h5_tags.length}
+                  </span>
+                </div>
+                <div className={`text-2xl font-bold text-green-600 transition-transform ${expandedSection === 'h5' ? 'rotate-45' : ''}`}>
+                  +
+                </div>
+              </button>
+              
+              {expandedSection === 'h5' && (
+                <div className="mt-3 space-y-2 animate-slideDown">
+                  {report.h5_tags.map((h5, idx) => (
+                    <div key={idx} className="text-sm text-gray-700 bg-gray-50 p-3 rounded pl-10 border-l-4 border-green-500">
+                      {h5}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* H6 Tags */}
+          {/* H6 Tags - COLLAPSIBLE */}
           {report.h6_tags && report.h6_tags.length > 0 && (
             <div className="mb-4">
-              <p className="text-sm font-medium text-gray-600 mb-2">
-                H6 Tags ({report.h6_tags.length})
-              </p>
-              <div className="space-y-2">
-                {report.h6_tags.map((h6, idx) => (
-                  <p key={idx} className="text-sm text-gray-700 bg-gray-50 p-2 rounded pl-12">
-                    {h6}
-                  </p>
-                ))}
-              </div>
+              <button
+                onClick={() => setExpandedSection(expandedSection === 'h6' ? null : 'h6')}
+                className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200 rounded-lg border border-yellow-200 transition-all"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm font-bold text-yellow-900">H6 Tags</span>
+                  <span className="px-3 py-1 bg-yellow-600 text-white rounded-full text-xs font-bold">
+                    {report.h6_tags.length}
+                  </span>
+                </div>
+                <div className={`text-2xl font-bold text-yellow-600 transition-transform ${expandedSection === 'h6' ? 'rotate-45' : ''}`}>
+                  +
+                </div>
+              </button>
+              
+              {expandedSection === 'h6' && (
+                <div className="mt-3 space-y-2 animate-slideDown">
+                  {report.h6_tags.map((h6, idx) => (
+                    <div key={idx} className="text-sm text-gray-700 bg-gray-50 p-3 rounded pl-12 border-l-4 border-yellow-500">
+                      {h6}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
-      </div>
-      {/* ========== END SECTION 1: BASIC SEO ========== */}
+
       {/* ========== SECTION 2: TECHNICAL SEO (ADVANCED) ========== */}
       <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="technical-seo-section">
         <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2 mb-6">
@@ -1444,6 +1513,8 @@ const ReportPage = () => {
 
 
     </div>
+  </div>
+
   );
 };  
 
