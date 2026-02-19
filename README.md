@@ -7,6 +7,10 @@
 [![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+## 📋 devloper info
+name = abhishek kumar
+linkdin id = https://www.linkedin.com/in/abhishek-dey-19aa47360/
+
 ## 📋 Table of Contents
 
 - [Features](#-features)
@@ -135,5 +139,6 @@
 ```bash
 git clone https://github.com/aby-a11y/ai-seo-web-analyzer.git
 cd ai-seo-web-analyzer
+
 
 
