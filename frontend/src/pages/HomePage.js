@@ -76,7 +76,7 @@ const HomePage = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <Sparkles className="w-8 h-8 text-indigo-600" />
-              <span className="text-2xl font-bold gradient-text">SEO Genius</span>
+              <span className="text-2xl font-bold gradient-text">Pixel Global</span>
             </div>
             <button
               onClick={() => navigate('/history')}
