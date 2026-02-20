@@ -201,86 +201,29 @@ const ReportPage = () => {
             {expandedIssue === index && (
               <div className="accordion-details px-4 pb-4">
                 <div className="bg-gray-50 p-4 rounded-lg border-t border-gray-200">
-                  {/* FIX SECTION - FORMATTED WITH BULLETS */}
+                  {/* FIX SECTION */}
                   <div className="mb-3">
-                    <p className="text-sm font-semibold text-indigo-600 mb-2 flex items-center space-x-2">
-                      <span>🔧</span>
-                      <span>How to Fix:</span>
-                    </p>
-                    <div className="bg-white p-4 rounded-lg border-l-4 border-indigo-600">
-                      <div className="space-y-3">
-                        {issue.recommendation.split(/\\\\n|\\n|\n/).filter(part => part.trim()).map((part, idx) => {
-                          const trimmed = part.trim();
-                          const colonIndex = trimmed.indexOf(':');
-                          
-                          // Check if it's a label line (CURRENT:, TARGET:, EXAMPLE:, IMPACT:)
-                          if (colonIndex > 0 && colonIndex < 30 && /^[A-Z\s]+:/.test(trimmed)) {
-                            const label = trimmed.substring(0, colonIndex);
-                            const value = trimmed.substring(colonIndex + 1).trim();
-                            
-                            return (
-                              <div key={idx} className="flex items-start space-x-3">
-                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 font-bold text-sm flex-shrink-0 mt-0.5">
-                                  •
-                                </span>
-                                <div className="flex-1">
-                                  <span className="font-bold text-gray-900 text-sm">{label}:</span>
-                                  <span className="text-gray-700 text-sm ml-1.5">{value}</span>
-                                </div>
-                              </div>
-                            );
-                          }
-                          
-                          // Regular line
-                          return (
-                            <div key={idx} className="flex items-start space-x-3">
-                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 font-bold text-sm flex-shrink-0 mt-0.5">
-                                •
-                              </span>
-                              <p className="text-sm text-gray-700 leading-relaxed flex-1">{trimmed}</p>
-                            </div>
-                          );
-                        })}
-                      </div>
+                    <p className="text-sm font-semibold text-indigo-600 mb-2">🔧 How to Fix:</p>
+                    <div className="bg-white p-3 rounded border-l-4 border-indigo-600">
+                      <p className="text-sm text-gray-700 leading-relaxed">{issue.recommendation}</p>
                     </div>
                   </div>
                   
-                  {/* PRIORITY IMPACT - ENHANCED */}
-                  <div className={`flex items-start space-x-3 p-4 rounded-lg border-l-4 ${
-                    issue.priority === 'High' 
-                      ? 'bg-red-50 border-red-500' 
-                      : issue.priority === 'Medium' 
-                        ? 'bg-yellow-50 border-yellow-500' 
-                        : 'bg-blue-50 border-blue-500'
-                  }`}>
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                      issue.priority === 'High' 
-                        ? 'bg-red-100' 
-                        : issue.priority === 'Medium' 
-                          ? 'bg-yellow-100' 
-                          : 'bg-blue-100'
-                    }`}>
-                      {issue.priority === 'High' ? '🔥' : issue.priority === 'Medium' ? '⚠️' : '✓'}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-gray-900 mb-1">Priority Impact</p>
-                      <p className={`text-xs leading-relaxed ${
+                  {/* IMPACT INFO */}
+                  <div className="flex items-start space-x-2 text-xs text-gray-600 bg-blue-50 p-3 rounded">
+                    <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <p>
+                      <strong>Priority Impact:</strong> {
                         issue.priority === 'High' 
-                          ? 'text-red-800' 
+                          ? '🔥 Critical - Fix immediately for maximum SEO benefit' 
                           : issue.priority === 'Medium' 
-                            ? 'text-yellow-800' 
-                            : 'text-blue-800'
-                      }`}>
-                        {issue.priority === 'High' 
-                          ? 'Critical - Fix immediately for maximum SEO benefit and ranking improvement' 
-                          : issue.priority === 'Medium' 
-                            ? 'Important - Address within 1-2 weeks to prevent ranking decline' 
-                            : 'Minor - Fix when possible to optimize overall performance'}
-                      </p>
-                    </div>
+                            ? '⚠️ Important - Address within 1-2 weeks' 
+                            : '✓ Minor - Fix when possible'
+                      }
+                    </p>
                   </div>
+                </div>
               </div>
-            </div>
             )}
           </div>
         </div>
@@ -726,74 +669,6 @@ const ReportPage = () => {
           )}
         </div>
       </div>
-      {/* 🤖 llms.txt Detection - NEW */}
-  {report.llms_analysis && (
-    <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-yellow-500 hover:shadow-md transition-shadow">
-      <p className="text-sm text-gray-600 mb-2 font-medium">llms.txt File</p>
-      <div className="flex items-center space-x-2 mb-2">
-        {report.llms_analysis.llms_txt_found ? (
-          <>
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            <span className="font-bold text-green-700">Found</span>
-          </>
-        ) : (
-          <>
-            <AlertTriangle className="w-5 h-5 text-yellow-600" />
-            <span className="font-bold text-yellow-700">Missing</span>
-          </>
-        )}
-      </div>
-      <p className="text-xs text-gray-600 mt-2">
-        {report.llms_analysis.llms_txt_found 
-          ? 'AI/LLM crawling instructions present' 
-          : 'Add llms.txt for AI discoverability'}
-      </p>
-      {report.llms_analysis.llms_txt_found && report.llms_analysis.llms_txt_url && (
-        <a 
-          href={report.llms_analysis.llms_txt_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-blue-600 hover:underline mt-2 inline-block"
-        >
-          View llms.txt →
-        </a>
-      )}
-    </div>
-  )}
-
-  {/* 📊 Analytics Detection - NEW */}
-  {report.analytics_analysis && (
-    <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-teal-500 hover:shadow-md transition-shadow">
-      <p className="text-sm text-gray-600 mb-2 font-medium">Analytics Tools</p>
-      <div className="flex items-center space-x-2 mb-2">
-        {report.analytics_analysis.has_analytics ? (
-          <>
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            <span className="font-bold text-green-700">Active</span>
-          </>
-        ) : (
-          <>
-            <AlertTriangle className="w-5 h-5 text-red-600" />
-            <span className="font-bold text-red-700">Not Found</span>
-          </>
-        )}
-      </div>
-      {report.analytics_analysis.has_analytics && report.analytics_analysis.detected_tools && (
-        <p className="text-xs text-gray-600 mt-2">
-          {report.analytics_analysis.detected_tools.slice(0, 2).join(', ')}
-          {report.analytics_analysis.detected_tools.length > 2 && 
-            ` +${report.analytics_analysis.detected_tools.length - 2} more`}
-        </p>
-      )}
-      {!report.analytics_analysis.has_analytics && (
-        <p className="text-xs text-gray-600 mt-2">
-          Install Google Analytics or GTM
-        </p>
-      )}
-    </div>
-  )}
-</div>
-
 
       {/* Noindex Warning - Conditional */}
       {report.technical_seo?.noindex && (
@@ -1632,16 +1507,13 @@ const ReportPage = () => {
             </div>
           )}
         </div>
-        
       )}
 
       {/* ========== END SECTION 5: ADVANCED ANALYTICS ========== */}
 
 
     </div>
-    
-  
-
+  </div>
 
   );
 };  
