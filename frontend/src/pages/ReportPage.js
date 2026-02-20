@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -727,6 +726,74 @@ const ReportPage = () => {
           )}
         </div>
       </div>
+      {/* 🤖 llms.txt Detection - NEW */}
+  {report.llms_analysis && (
+    <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-yellow-500 hover:shadow-md transition-shadow">
+      <p className="text-sm text-gray-600 mb-2 font-medium">llms.txt File</p>
+      <div className="flex items-center space-x-2 mb-2">
+        {report.llms_analysis.llms_txt_found ? (
+          <>
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <span className="font-bold text-green-700">Found</span>
+          </>
+        ) : (
+          <>
+            <AlertTriangle className="w-5 h-5 text-yellow-600" />
+            <span className="font-bold text-yellow-700">Missing</span>
+          </>
+        )}
+      </div>
+      <p className="text-xs text-gray-600 mt-2">
+        {report.llms_analysis.llms_txt_found 
+          ? 'AI/LLM crawling instructions present' 
+          : 'Add llms.txt for AI discoverability'}
+      </p>
+      {report.llms_analysis.llms_txt_found && report.llms_analysis.llms_txt_url && (
+        <a 
+          href={report.llms_analysis.llms_txt_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-blue-600 hover:underline mt-2 inline-block"
+        >
+          View llms.txt →
+        </a>
+      )}
+    </div>
+  )}
+
+  {/* 📊 Analytics Detection - NEW */}
+  {report.analytics_analysis && (
+    <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-teal-500 hover:shadow-md transition-shadow">
+      <p className="text-sm text-gray-600 mb-2 font-medium">Analytics Tools</p>
+      <div className="flex items-center space-x-2 mb-2">
+        {report.analytics_analysis.has_analytics ? (
+          <>
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <span className="font-bold text-green-700">Active</span>
+          </>
+        ) : (
+          <>
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+            <span className="font-bold text-red-700">Not Found</span>
+          </>
+        )}
+      </div>
+      {report.analytics_analysis.has_analytics && report.analytics_analysis.detected_tools && (
+        <p className="text-xs text-gray-600 mt-2">
+          {report.analytics_analysis.detected_tools.slice(0, 2).join(', ')}
+          {report.analytics_analysis.detected_tools.length > 2 && 
+            ` +${report.analytics_analysis.detected_tools.length - 2} more`}
+        </p>
+      )}
+      {!report.analytics_analysis.has_analytics && (
+        <p className="text-xs text-gray-600 mt-2">
+          Install Google Analytics or GTM
+        </p>
+      )}
+    </div>
+  )}
+</div>
+
 
       {/* Noindex Warning - Conditional */}
       {report.technical_seo?.noindex && (
@@ -1565,13 +1632,16 @@ const ReportPage = () => {
             </div>
           )}
         </div>
+        
       )}
 
       {/* ========== END SECTION 5: ADVANCED ANALYTICS ========== */}
 
 
     </div>
-  </div>
+    
+  
+
 
   );
 };  
