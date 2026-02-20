@@ -202,29 +202,86 @@ const ReportPage = () => {
             {expandedIssue === index && (
               <div className="accordion-details px-4 pb-4">
                 <div className="bg-gray-50 p-4 rounded-lg border-t border-gray-200">
-                  {/* FIX SECTION */}
+                  {/* FIX SECTION - FORMATTED WITH BULLETS */}
                   <div className="mb-3">
-                    <p className="text-sm font-semibold text-indigo-600 mb-2">🔧 How to Fix:</p>
-                    <div className="bg-white p-3 rounded border-l-4 border-indigo-600">
-                      <p className="text-sm text-gray-700 leading-relaxed">{issue.recommendation}</p>
+                    <p className="text-sm font-semibold text-indigo-600 mb-2 flex items-center space-x-2">
+                      <span>🔧</span>
+                      <span>How to Fix:</span>
+                    </p>
+                    <div className="bg-white p-4 rounded-lg border-l-4 border-indigo-600">
+                      <div className="space-y-3">
+                        {issue.recommendation.split(/\\\\n|\\n|\n/).filter(part => part.trim()).map((part, idx) => {
+                          const trimmed = part.trim();
+                          const colonIndex = trimmed.indexOf(':');
+                          
+                          // Check if it's a label line (CURRENT:, TARGET:, EXAMPLE:, IMPACT:)
+                          if (colonIndex > 0 && colonIndex < 30 && /^[A-Z\s]+:/.test(trimmed)) {
+                            const label = trimmed.substring(0, colonIndex);
+                            const value = trimmed.substring(colonIndex + 1).trim();
+                            
+                            return (
+                              <div key={idx} className="flex items-start space-x-3">
+                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 font-bold text-sm flex-shrink-0 mt-0.5">
+                                  •
+                                </span>
+                                <div className="flex-1">
+                                  <span className="font-bold text-gray-900 text-sm">{label}:</span>
+                                  <span className="text-gray-700 text-sm ml-1.5">{value}</span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          
+                          // Regular line
+                          return (
+                            <div key={idx} className="flex items-start space-x-3">
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 font-bold text-sm flex-shrink-0 mt-0.5">
+                                •
+                              </span>
+                              <p className="text-sm text-gray-700 leading-relaxed flex-1">{trimmed}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                   
-                  {/* IMPACT INFO */}
-                  <div className="flex items-start space-x-2 text-xs text-gray-600 bg-blue-50 p-3 rounded">
-                    <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <p>
-                      <strong>Priority Impact:</strong> {
+                  {/* PRIORITY IMPACT - ENHANCED */}
+                  <div className={`flex items-start space-x-3 p-4 rounded-lg border-l-4 ${
+                    issue.priority === 'High' 
+                      ? 'bg-red-50 border-red-500' 
+                      : issue.priority === 'Medium' 
+                        ? 'bg-yellow-50 border-yellow-500' 
+                        : 'bg-blue-50 border-blue-500'
+                  }`}>
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                      issue.priority === 'High' 
+                        ? 'bg-red-100' 
+                        : issue.priority === 'Medium' 
+                          ? 'bg-yellow-100' 
+                          : 'bg-blue-100'
+                    }`}>
+                      {issue.priority === 'High' ? '🔥' : issue.priority === 'Medium' ? '⚠️' : '✓'}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-gray-900 mb-1">Priority Impact</p>
+                      <p className={`text-xs leading-relaxed ${
                         issue.priority === 'High' 
-                          ? '🔥 Critical - Fix immediately for maximum SEO benefit' 
+                          ? 'text-red-800' 
                           : issue.priority === 'Medium' 
-                            ? '⚠️ Important - Address within 1-2 weeks' 
-                            : '✓ Minor - Fix when possible'
-                      }
-                    </p>
+                            ? 'text-yellow-800' 
+                            : 'text-blue-800'
+                      }`}>
+                        {issue.priority === 'High' 
+                          ? 'Critical - Fix immediately for maximum SEO benefit and ranking improvement' 
+                          : issue.priority === 'Medium' 
+                            ? 'Important - Address within 1-2 weeks to prevent ranking decline' 
+                            : 'Minor - Fix when possible to optimize overall performance'}
+                      </p>
+                    </div>
                   </div>
-                </div>
               </div>
+            </div>
             )}
           </div>
         </div>
