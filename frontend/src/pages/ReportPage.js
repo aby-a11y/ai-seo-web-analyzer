@@ -106,7 +106,7 @@ const ReportPage = () => {
             </button>
             <div className="flex items-center space-x-2">
               <Sparkles className="w-6 h-6 text-indigo-600" />
-              <span className="text-xl font-bold gradient-text">SEO Genius</span>
+              <span className="text-xl font-bold gradient-text">Pixel global Reports</span>
             </div>
           </div>
         </div>
