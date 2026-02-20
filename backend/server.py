@@ -14,26 +14,6 @@ from bs4 import BeautifulSoup
 from openai import AsyncOpenAI
 import json
 import re
-import nltk
-import sys
-
-logger_setup = logging.getLogger(__name__)
-
-try:
-    logger_setup.info("Checking NLTK data...")
-    nltk.data.find('corpora/stopwords.zip')
-    logger_setup.info("✅ NLTK stopwords found")
-except LookupError:
-    logger_setup.info("⬇️ Downloading NLTK data (stopwords, punkt)...")
-    try:
-        nltk.download('stopwords', quiet=True, download_dir='/tmp/nltk_data')
-        nltk.download('punkt', quiet=True, download_dir='/tmp/nltk_data')
-        # Add to NLTK data path
-        nltk.data.path.append('/tmp/nltk_data')
-        logger_setup.info("✅ NLTK data downloaded successfully")
-    except Exception as e:
-        logger_setup.error(f"❌ Failed to download NLTK data: {str(e)}")
-        sys.exit(1)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -127,8 +107,6 @@ class SEOReport(BaseModel):
     readability_analysis: Optional[Dict[str, Any]] = {}
     keyword_density_analysis: Optional[Dict[str, Any]] = {}
     page_speed_analysis: Optional[Dict[str, Any]] = {}
-    llms_analysis: Optional[Dict[str, Any]] = {}
-    analytics_analysis: Optional[Dict[str, Any]] = {}
 
 
 class SEOAnalysisRequest(BaseModel):
@@ -173,8 +151,6 @@ class SEOReportResponse(BaseModel):
     readability_analysis: Optional[Dict[str, Any]] = {}
     keyword_density_analysis: Optional[Dict[str, Any]] = {}
     page_speed_analysis: Optional[Dict[str, Any]] = {}
-    llms_analysis: Optional[Dict[str, Any]] = {}
-    analytics_analysis: Optional[Dict[str, Any]] = {}
 
 
 # Configure logging
@@ -1023,104 +999,6 @@ def estimate_domain_authority(domain: str) -> str:
     
     return "Unknown"
 
-# ========== NEW FEATURES: llms.txt & Analytics Detection ==========
-# Add these functions BEFORE the scrape_website() function
-
-def check_llms_txt(final_url: str) -> Dict[str, Any]:
-    """Check for llms.txt file (AI training & LLM crawling instructions)"""
-    from urllib.parse import urlparse, urljoin
-    
-    parsed = urlparse(final_url)
-    root = f"{parsed.scheme}://{parsed.netloc}"
-    llms_url = urljoin(root, "/llms.txt")
-    
-    llms_found = False
-    llms_content_preview = None
-    llms_size_kb = 0
-    
-    try:
-        import httpx
-        with httpx.Client(timeout=10) as client:
-            llms_resp = client.get(llms_url)
-            if llms_resp.status_code == 200:
-                llms_found = True
-                llms_content_preview = llms_resp.text[:500]  # First 500 chars
-                llms_size_kb = round(len(llms_resp.content) / 1024, 2)
-    except:
-        llms_found = False
-    
-    return {
-        "llms_txt_found": llms_found,
-        "llms_txt_url": llms_url,
-        "llms_txt_preview": llms_content_preview,
-        "llms_txt_size_kb": llms_size_kb,
-        "status": "✅ Found" if llms_found else "✗ Missing",
-        "recommendation": "⚠️ llms.txt missing - Add for AI/LLM discoverability" if not llms_found else "✅ llms.txt found"
-    }
-
-
-def detect_analytics(soup: BeautifulSoup) -> Dict[str, Any]:
-    """Detect analytics tools (Google Analytics, Meta Pixel, etc.)"""
-    
-    analytics_data = {
-        "has_analytics": False,
-        "detected_tools": [],
-        "google_analytics": False,
-        "google_tag_manager": False,
-        "meta_pixel": False,
-        "hotjar": False,
-        "microsoft_clarity": False,
-        "matomo": False,
-        "recommendations": []
-    }
-    
-    page_html = str(soup)
-    
-    # Google Analytics (GA4 & Universal Analytics)
-    if 'gtag' in page_html or 'google-analytics.com' in page_html:
-        analytics_data["google_analytics"] = True
-        analytics_data["detected_tools"].append("Google Analytics")
-        analytics_data["has_analytics"] = True
-    
-    # Google Tag Manager
-    if 'googletagmanager.com/gtm.js' in page_html or 'GTM-' in page_html:
-        analytics_data["google_tag_manager"] = True
-        analytics_data["detected_tools"].append("Google Tag Manager")
-        analytics_data["has_analytics"] = True
-    
-    # Meta (Facebook) Pixel
-    if 'connect.facebook.net' in page_html or 'fbq(' in page_html:
-        analytics_data["meta_pixel"] = True
-        analytics_data["detected_tools"].append("Meta Pixel")
-        analytics_data["has_analytics"] = True
-    
-    # Hotjar
-    if 'hotjar.com' in page_html or 'hj(' in page_html:
-        analytics_data["hotjar"] = True
-        analytics_data["detected_tools"].append("Hotjar")
-        analytics_data["has_analytics"] = True
-    
-    # Microsoft Clarity
-    if 'clarity.ms' in page_html:
-        analytics_data["microsoft_clarity"] = True
-        analytics_data["detected_tools"].append("Microsoft Clarity")
-        analytics_data["has_analytics"] = True
-    
-    # Matomo (Piwik)
-    if 'matomo' in page_html.lower() or 'piwik' in page_html.lower():
-        analytics_data["matomo"] = True
-        analytics_data["detected_tools"].append("Matomo Analytics")
-        analytics_data["has_analytics"] = True
-    
-    # Recommendations
-    if not analytics_data["has_analytics"]:
-        analytics_data["recommendations"].append("⚠️ No analytics detected - Install Google Analytics")
-        analytics_data["status"] = "✗ Not Found"
-    else:
-        analytics_data["recommendations"].append(f"✅ Using: {', '.join(analytics_data['detected_tools'])}")
-        analytics_data["status"] = "✅ Active"
-    
-    return analytics_data
 
 # Web Scraping Function
 async def scrape_website(url: str) -> Dict[str, Any]:
@@ -1143,8 +1021,6 @@ async def scrape_website(url: str) -> Dict[str, Any]:
         schema_analysis = validate_schema_markup(soup, str(url))
         linking_analysis = analyze_internal_links(soup, str(url))
         backlink_analysis = await analyze_backlinks(str(url), soup)  # NEW!
-        llms_analysis = check_llms_txt(final_url)
-        analytics_analysis = detect_analytics(soup)
 
         # Extract title
         title = soup.find('title')
@@ -1235,11 +1111,6 @@ async def scrape_website(url: str) -> Dict[str, Any]:
              'readability_analysis': readability_data,
              'keyword_density_analysis': keyword_analysis,
              'page_speed_analysis': page_speed_data,
-             'llms_analysis': llms_analysis,
-             'llms_txt_found': llms_analysis['llms_txt_found'],
-             'analytics_analysis': analytics_analysis,
-             'analytics_detected': analytics_analysis['has_analytics'],
-             'analytics_tools': analytics_analysis['detected_tools'],
         }
         
     except Exception as e:
@@ -1345,19 +1216,6 @@ NEVER recalculate or use different character counts, word counts, or image count
 - Sitemap.xml: {'✓ Found' if technical_seo.get('sitemap_found') else '✗ Missing'}
 - Meta Robots: {technical_seo.get('robots_directive', 'Not set')}
 - Noindex Status: {'⚠️ YES (Page is noindexed!)' if technical_seo.get('noindex') else '✓ No'}
-🤖 AI/LLM Optimization (NEW!):
-- llms.txt File: {scraped_data.get('llms_analysis', {}).get('status', 'Not checked')}
-- URL: {scraped_data.get('llms_analysis', {}).get('llms_txt_url', 'N/A')}
-- Recommendation: {scraped_data.get('llms_analysis', {}).get('recommendation', 'Check manually')}
-VERIFIED STATUS: {"✅ OPTIMAL - Do NOT add to seo_issues" if scraped_data.get('llms_txt_found') else "⚠️ MEDIUM PRIORITY - MUST add to seo_issues as 'AI Optimization'"}
-📊 Analytics Detection (NEW!):
-- Analytics Active: {scraped_data.get('analytics_analysis', {}).get('status', 'Not checked')}
-- Tools Found: {', '.join(scraped_data.get('analytics_tools', [])) or 'None'}
-- Recommendation: {scraped_data.get('analytics_analysis',
-{}).get('recommendations', ['Check manually'])[0]}
-VERIFIED STATUS: {"✅ OPTIMAL - Do NOT add to seo_issues" if 
-scraped_data.get('analytics_detected') else "⚠️ MEDIUM PRIORITY - MUST add to seo_issues as 'Analytics'"}
-
 
 🔒 Security:
 - SSL/HTTPS: {'✓ Enabled' if technical_seo.get('ssl_enabled') else '❌ DISABLED (Critical!)'}
@@ -1596,8 +1454,6 @@ Be professional, specific, and client-ready. Focus on high-impact optimizations,
             readability_analysis=scraped_data.get('readability_analysis', {}),
             keyword_density_analysis=scraped_data.get('keyword_density_analysis', {}),
             page_speed_analysis=scraped_data.get('page_speed_analysis', {}),
-            llms_analysis=scraped_data.get('llms_analysis', {}),
-            analytics_analysis=scraped_data.get('analytics_analysis', {}),
             seo_score=ai_analysis.get('seo_score'),
             analysis_summary=ai_analysis.get('analysis_summary'),
             seo_issues=seo_issues_list,
