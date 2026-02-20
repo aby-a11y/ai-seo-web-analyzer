@@ -295,7 +295,7 @@ const ReportPage = () => {
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
             <FileText className="w-7 h-7 text-indigo-600" />
-            <span>📊 Section 1: Basic SEO</span>
+            <span>📊Basic SEO</span>
           </h2>
 
           {/* Grid for Title, Meta, Word Count, Images */}
@@ -592,7 +592,7 @@ const ReportPage = () => {
       <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="technical-seo-section">
         <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2 mb-6">
           <CheckCircle className="w-7 h-7 text-indigo-600" />
-          <span>🔧 Section 2: Technical SEO (Advanced)</span>
+          <span>🔧Technical SEO (Advanced)</span>
         </h2>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -755,7 +755,7 @@ const ReportPage = () => {
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-2">
           <Target className="w-8 h-8 text-indigo-600" />
-          <span>🔗 Section 3: Keywords & Backlinks</span>
+          <span>🔗Keywords & Backlinks</span>
         </h2>
         <p className="text-gray-600 mb-6">Keyword strategy, internal structure, and external link profile</p>
       </div>
@@ -988,7 +988,7 @@ const ReportPage = () => {
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-2">
           <AlertTriangle className="w-8 h-8 text-red-500" />
-          <span>📈 Section 4: Recommendations & Action Plan</span>
+          <span>📈Recommendations</span>
         </h2>
         <p className="text-gray-600 mb-6">Priority-based improvements and strategic guidance</p>
       </div>
@@ -1144,7 +1144,7 @@ const ReportPage = () => {
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-2">
           <TrendingUp className="w-8 h-8 text-indigo-600" />
-          <span>📊 Section 5: Advanced Analytics</span>
+          <span>📊Advanced Analytics</span>
         </h2>
         <p className="text-gray-600 mb-6">Deep content analysis: readability, keywords, and performance metrics</p>
       </div>
@@ -1541,7 +1541,7 @@ const ReportPage = () => {
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="action-plan-section">
           <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2 mb-6">
             <Calendar className="w-6 h-6 text-indigo-600" />
-            <span>30-Day Action Plan</span>
+            <span>Action Plan</span>
           </h3>
           <div className="space-y-4">
             {report.action_plan_30_days.map((item, index) => (
