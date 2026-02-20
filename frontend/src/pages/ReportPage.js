@@ -1140,40 +1140,6 @@ const ReportPage = () => {
 )}
 
 
-
-
-      {/* 4.4 30-Day Action Plan */}
-      {report.action_plan_30_days && report.action_plan_30_days.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="action-plan-section">
-          <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2 mb-6">
-            <Calendar className="w-6 h-6 text-indigo-600" />
-            <span>30-Day Action Plan</span>
-          </h3>
-          <div className="space-y-4">
-            {report.action_plan_30_days.map((item, index) => (
-              <div key={index} className="border-l-4 border-indigo-600 bg-gradient-to-r from-indigo-50 to-white p-6 rounded-r-lg">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="text-lg font-bold text-gray-900">{item.week || `Week ${index + 1}`}</h4>
-                  {item.priority && (
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getPriorityColor(item.priority)}`}>
-                      {item.priority} Priority
-                    </span>
-                  )}
-                </div>
-                <p className="text-gray-800 mb-2 leading-relaxed">{item.action}</p>
-                {item.expected_impact && (
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">Expected Impact:</span> {item.expected_impact}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {/* ========== END SECTION 4: RECOMMENDATIONS & ACTION PLAN ========== */}
-
-
       {/* ========== SECTION 5: ADVANCED ANALYTICS ========== */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center space-x-2">
@@ -1568,6 +1534,40 @@ const ReportPage = () => {
       )}
 
       {/* ========== END SECTION 5: ADVANCED ANALYTICS ========== */}
+
+
+      {/* 4.4 30-Day Action Plan */}
+      {report.action_plan_30_days && report.action_plan_30_days.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="action-plan-section">
+          <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2 mb-6">
+            <Calendar className="w-6 h-6 text-indigo-600" />
+            <span>30-Day Action Plan</span>
+          </h3>
+          <div className="space-y-4">
+            {report.action_plan_30_days.map((item, index) => (
+              <div key={index} className="border-l-4 border-indigo-600 bg-gradient-to-r from-indigo-50 to-white p-6 rounded-r-lg">
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="text-lg font-bold text-gray-900">{item.week || `Week ${index + 1}`}</h4>
+                  {item.priority && (
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getPriorityColor(item.priority)}`}>
+                      {item.priority} Priority
+                    </span>
+                  )}
+                </div>
+                <p className="text-gray-800 mb-2 leading-relaxed">{item.action}</p>
+                {item.expected_impact && (
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Expected Impact:</span> {item.expected_impact}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* ========== END SECTION 4: RECOMMENDATIONS & ACTION PLAN ========== */}
+
+
 
 
     </div>
