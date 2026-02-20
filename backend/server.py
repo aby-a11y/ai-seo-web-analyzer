@@ -14,6 +14,8 @@ from bs4 import BeautifulSoup
 from openai import AsyncOpenAI
 import json
 import re
+import nltk
+import sys
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
