@@ -998,105 +998,6 @@ def estimate_domain_authority(domain: str) -> str:
         return "Medium (DA 40-60)"
     
     return "Unknown"
-# ========== STRICT SCORE VALIDATION ==========
-def validate_and_adjust_score(ai_score: int, scraped_data: Dict) -> int:
-    """Apply strict scoring rules - cap inflated scores"""
-    
-    adjusted_score = ai_score
-    penalties = []
-    
-    # Critical blockers - hard caps
-    tech_seo = scraped_data.get('technical_seo', {})
-    
-    # 1. No HTTPS = MAX 40 score
-    if not tech_seo.get('ssl_enabled'):
-        adjusted_score = min(adjusted_score, 40)
-        penalties.append("❌ No HTTPS - capped at 40")
-    
-    # 2. Noindex enabled = MAX 20 score
-    if tech_seo.get('noindex'):
-        adjusted_score = min(adjusted_score, 20)
-        penalties.append("❌ Noindex enabled - capped at 20")
-    
-    # 3. Missing title = -25
-    title_len = len(scraped_data.get('title', ''))
-    if title_len == 0:
-        adjusted_score -= 25
-        penalties.append("❌ No title: -25")
-    elif title_len < 30 or title_len > 70:
-        adjusted_score -= 15
-        penalties.append(f"⚠️ Title {title_len} chars: -15")
-    
-    # 4. Missing meta = -20
-    meta_len = len(scraped_data.get('meta_description', ''))
-    if meta_len == 0:
-        adjusted_score -= 20
-        penalties.append("❌ No meta: -20")
-    elif meta_len < 120 or meta_len > 180:
-        adjusted_score -= 10
-        penalties.append(f"⚠️ Meta {meta_len} chars: -10")
-    
-    # 5. H1 issues = -20
-    h1_count = len(scraped_data.get('h1_tags', []))
-    if h1_count == 0:
-        adjusted_score -= 20
-        penalties.append("❌ No H1: -20")
-    elif h1_count > 1:
-        adjusted_score -= 15
-        penalties.append(f"⚠️ Multiple H1s ({h1_count}): -15")
-    
-    # 6. Thin content = -25
-    word_count = scraped_data.get('word_count', 0)
-    if word_count < 300:
-        adjusted_score -= 25
-        penalties.append(f"❌ Only {word_count} words: -25")
-    elif word_count < 800:
-        adjusted_score -= 15
-        penalties.append(f"⚠️ Only {word_count} words: -15")
-    
-    # 7. Images without alt = -15
-    total_imgs = scraped_data.get('total_images', 0)
-    missing_alt = scraped_data.get('images_without_alt', 0)
-    if total_imgs > 0 and missing_alt > 0:
-        missing_pct = (missing_alt / total_imgs) * 100
-        if missing_pct > 50:
-            adjusted_score -= 15
-            penalties.append(f"⚠️ {missing_alt}/{total_imgs} missing alt: -15")
-        elif missing_pct > 20:
-            adjusted_score -= 10
-            penalties.append(f"⚠️ {missing_alt}/{total_imgs} missing alt: -10")
-    
-    # 8. No schema = -15
-    if not scraped_data.get('schema_analysis', {}).get('has_schema'):
-        adjusted_score -= 15
-        penalties.append("❌ No schema: -15")
-    
-    # 9. Slow page speed = -20
-    load_time = scraped_data.get('page_speed_analysis', {}).get('total_load_time_seconds', 0)
-    if load_time > 5:
-        adjusted_score -= 20
-        penalties.append(f"❌ Load {load_time}s: -20")
-    elif load_time > 3:
-        adjusted_score -= 10
-        penalties.append(f"⚠️ Load {load_time}s: -10")
-    
-    # 10. Poor internal linking = -10
-    internal_ratio = scraped_data.get('linking_analysis', {}).get('internal_ratio', 0)
-    if internal_ratio < 50:
-        adjusted_score -= 10
-        penalties.append(f"⚠️ Internal links {internal_ratio}%: -10")
-    
-    # Floor at 0, cap at 85 (reserve 85+ for exceptional sites)
-    adjusted_score = max(0, min(adjusted_score, 85))
-    
-    # Log adjustments
-    if penalties:
-        logger.info(f"Score adjusted: {ai_score} → {adjusted_score}")
-        logger.info(f"Penalties: {'; '.join(penalties)}")
-    
-    return adjusted_score
-
-
 
 
 # Web Scraping Function
@@ -1250,40 +1151,6 @@ async def analyze_with_ai(url: str, scraped_data: Dict[str, Any]) -> SEOReport:
     # Create enhanced analysis prompt with ALL metrics
       # Create enhanced analysis prompt with VERIFIED DATA
     analysis_prompt = f"""You are a senior SEO consultant analyzing a website. Provide a comprehensive, data-driven SEO audit with SPECIFIC METRICS and ACTIONABLE recommendations.
-
-🚨 CRITICAL SCORING RULES (Be STRICT!):
-
-Base: 100 points - Apply ALL penalties that match:
-
-CRITICAL PENALTIES (Hard caps):
-- No HTTPS: MAX 40/100 (severe ranking penalty)
-- Noindex enabled: MAX 20/100 (page won't rank!)
-- No title tag: -30 points
-- No meta description: -25 points
-- No H1 or multiple H1s: -25 points
-- < 300 words: -30 points
-- No schema markup: -20 points
-- Load time > 5s: -25 points
-- 50%+ images missing alt: -20 points
-- No robots.txt or sitemap: -15 each
-
-SCORE BRACKETS (Reserve high scores!):
-- 85-100: EXCEPTIONAL (top 5% of web - VERY RARE!)
-- 75-84: GOOD (well-optimized, few issues)
-- 60-74: FAIR (needs improvement)
-- 40-59: POOR (major issues)
-- <40: CRITICAL (blocking issues)
-
-⚠️ IMPORTANT: A site CAN'T score 80+ if it has:
-- Missing title/meta/H1
-- < 800 words
-- No HTTPS
-- No schema
-- Slow load (>3s)
-- Multiple critical issues
-
-Be REALISTIC - most sites score 50-70!
-
 
 Website URL: {url}
 
@@ -1543,12 +1410,6 @@ Be professional, specific, and client-ready. Focus on high-impact optimizations,
         response_text = response.choices[0].message.content
         ai_analysis = json.loads(response_text)
         
-        # ✅ VALIDATE AI SCORE - Apply strict penalties
-      
-        ai_score = ai_analysis.get('seo_score', 50)
-        validated_score = validate_and_adjust_score(ai_score, scraped_data)
-        
-        
         
         seo_issues_list = []
         for issue in ai_analysis.get('seo_issues', []):
@@ -1593,7 +1454,7 @@ Be professional, specific, and client-ready. Focus on high-impact optimizations,
             readability_analysis=scraped_data.get('readability_analysis', {}),
             keyword_density_analysis=scraped_data.get('keyword_density_analysis', {}),
             page_speed_analysis=scraped_data.get('page_speed_analysis', {}),
-            seo_score=validated_score,
+            seo_score=ai_analysis.get('seo_score'),
             analysis_summary=ai_analysis.get('analysis_summary'),
             seo_issues=seo_issues_list,
 
