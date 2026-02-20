@@ -17,6 +17,24 @@ import re
 import nltk
 import sys
 
+logger_setup = logging.getLogger(__name__)
+
+try:
+    logger_setup.info("Checking NLTK data...")
+    nltk.data.find('corpora/stopwords.zip')
+    logger_setup.info("✅ NLTK stopwords found")
+except LookupError:
+    logger_setup.info("⬇️ Downloading NLTK data (stopwords, punkt)...")
+    try:
+        nltk.download('stopwords', quiet=True, download_dir='/tmp/nltk_data')
+        nltk.download('punkt', quiet=True, download_dir='/tmp/nltk_data')
+        # Add to NLTK data path
+        nltk.data.path.append('/tmp/nltk_data')
+        logger_setup.info("✅ NLTK data downloaded successfully")
+    except Exception as e:
+        logger_setup.error(f"❌ Failed to download NLTK data: {str(e)}")
+        sys.exit(1)
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
