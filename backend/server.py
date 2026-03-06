@@ -1480,6 +1480,15 @@ Be professional, specific, and client-ready. Focus on high-impact optimizations,
         logger.error(f"Error in AI analysis: {str(e)}")
         raise HTTPException(status_code=500, detail=f"AI analysis failed: {str(e)}")
 
+# ========== ROOT HEALTH CHECK ENDPOINT ==========
+@app.get("/")
+async def root():
+    return {
+        "status": "healthy",
+        "service": "AI SEO Web Analyzer",
+        "version": "2.0.0"
+    }
+
 
 
 # API Routes
