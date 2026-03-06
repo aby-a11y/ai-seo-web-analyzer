@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict, HttpUrl,
+from pydantic import BaseModel, Field, ConfigDict, HttpUrl
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone
@@ -117,7 +117,7 @@ class SEOAnalysisRequest(BaseModel):
 # ✅ NEW: User Details Model (ADD THIS)
 class UserDetails(BaseModel):
     name: str
-    email: Str  # Email validation ke liye
+    email: str  # Email validation ke liye
     phone: str
 
 # ✅ NEW: Combined Request Model (ADD THIS)
