@@ -135,6 +135,36 @@ const HistoryPage = () => {
                         minute: '2-digit'
                       })}
                     </p>
+                                        {(report.user_name || report.user_email || report.user_phone) && (
+                      <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-4 mb-4 border border-indigo-100">
+                        <h4 className="text-sm font-semibold text-indigo-900 mb-2">Client Details:</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                          {report.user_name && (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-indigo-600 font-medium">👤 Name:</span>
+                              <span className="text-gray-700">{report.user_name}</span>
+                            </div>
+                          )}
+                          {report.user_email && (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-indigo-600 font-medium">📧 Email:</span>
+                              <a href={`mailto:${report.user_email}`} className="text-gray-700 hover:text-indigo-600 underline">
+                                {report.user_email}
+                              </a>
+                            </div>
+                          )}
+                          {report.user_phone && (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-indigo-600 font-medium">📱 Phone:</span>
+                              <a href={`tel:${report.user_phone}`} className="text-gray-700 hover:text-indigo-600 underline">
+                                {report.user_phone}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {/* Display analysis summary if available */}
 
                     {report.analysis_summary && (
                       <p className="text-gray-700 mb-4 line-clamp-2">{report.analysis_summary}</p>
