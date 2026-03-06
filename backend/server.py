@@ -68,6 +68,9 @@ class SEOReport(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     url: str
     analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    user_phone: Optional[str] = None
     
     # Website Overview
     title: Optional[str] = None
@@ -111,6 +114,9 @@ class SEOReport(BaseModel):
 
 class SEOAnalysisRequest(BaseModel):
     url: HttpUrl
+    name: str = Field(..., min_length=2, max_length=100, description="User's full name")
+    email: str = Field(..., pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', description="User's email address")
+    phone: str = Field(..., min_length=10, max_length=15, description="User's phone number")
 
 
 class SEOReportResponse(BaseModel):
@@ -119,6 +125,9 @@ class SEOReportResponse(BaseModel):
     id: str
     url: str
     analyzed_at: datetime
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    user_phone: Optional[str] = None
     title: Optional[str] = None
     meta_description: Optional[str] = None
     h1_tags: List[str] = []
@@ -1515,12 +1524,17 @@ async def analyze_seo(request: SEOAnalysisRequest):
     # AI analysis
     report = await analyze_with_ai(url, scraped_data)
     
+    # Add user information to report
+    report.user_name = request.name
+    report.user_email = request.email
+    report.user_phone = request.phone
+    
     # Save to database
     doc = report.model_dump()
     doc['analyzed_at'] = doc['analyzed_at'].isoformat()
     
     await db.seo_reports.insert_one(doc)
-    
+
     logger.info(f"SEO analysis completed for: {url}")
     return report
 
