@@ -7,8 +7,6 @@ import {
   TrendingUp, Target, Users, FileText, Calendar, Copy, Check,
   Sparkles, Link2, Image as ImageIcon, Share2, Shield
 } from 'lucide-react';
-import Report from '../components/Report';
-
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -150,50 +148,6 @@ const ReportPage = () => {
               </p>
             </div>
           </div>
-          
-          {(report.user_name || report.user_email || report.user_phone) && (
-                <div className="mt-6 bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 rounded-xl p-6 border-2 border-indigo-200 shadow-sm">
-                  <h4 className="text-base font-bold text-indigo-900 mb-4 flex items-center space-x-2">
-                    <span className="text-xl">👤</span>
-                    <span>Client Information</span>
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {report.user_name && (
-                      <div className="bg-white rounded-lg p-4 border border-indigo-100 shadow-sm">
-                        <p className="text-xs text-gray-500 mb-1 font-medium uppercase">Name</p>
-                        <p className="text-base font-semibold text-gray-900">{report.user_name}</p>
-                      </div>
-                    )}
-                    {report.user_email && (
-                      <div className="bg-white rounded-lg p-4 border border-indigo-100 shadow-sm">
-                        <p className="text-xs text-gray-500 mb-1 font-medium uppercase">Email</p>
-                        <a 
-                          href={`mailto:${report.user_email}`} 
-                          className="text-base font-semibold text-indigo-600 hover:text-indigo-700 hover:underline break-all"
-                        >
-                          {report.user_email}
-                        </a>
-                      </div>
-                    )}
-                    {report.user_phone && (
-                      <div className="bg-white rounded-lg p-4 border border-indigo-100 shadow-sm">
-                        <p className="text-xs text-gray-500 mb-1 font-medium uppercase">Phone</p>
-                        <a 
-                          href={`tel:${report.user_phone}`} 
-                          className="text-base font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
-                        >
-                          {report.user_phone}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              {/* 👆 YEH NAYA CODE ADD KARO 👆 */}
-            </div>
-          </div>
-          
-
 
           {report.analysis_summary && (
             <div className="bg-indigo-50 border-l-4 border-indigo-600 p-6 rounded-r-lg">
@@ -201,11 +155,7 @@ const ReportPage = () => {
             </div>
           )}
         </div>
-        )}
-        
-         
-       
-      {/* 4.1 SEO Issues - COLLAPSIBLE */}
+        {/* 4.1 SEO Issues - COLLAPSIBLE */}
 {report.seo_issues && report.seo_issues.length > 0 && (
   <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="seo-issues-section">
     <div className="flex items-center justify-between mb-6">
@@ -1617,5 +1567,13 @@ const ReportPage = () => {
       )}
       {/* ========== END SECTION 4: RECOMMENDATIONS & ACTION PLAN ========== */}
 
-      
+
+
+
+    </div>
+  </div>
+
+  );
+};  
+
 export default ReportPage;
