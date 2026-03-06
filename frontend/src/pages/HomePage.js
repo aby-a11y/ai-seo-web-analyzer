@@ -47,28 +47,23 @@ const HomePage = () => {
     return normalized;
   };
 
-  const handleAnalyze = async (e) => {
-    e.preventDefault();
-    setError('');
-    
-    // ✨ UPDATED: Normalize URL before validation
-    const norm = normalizeUrl(url);
-    setNormalizedUrl(norm);
+ const handleAnalyze = async (e) => {
+  e.preventDefault();
+  setError('');
 
+  const norm = normalizeUrl(url);
 
-    
-    // Validate URL
-    try {
-      new URL(normalizedUrl);
-    } catch {
-      setError('Please enter a valid website URL (e.g., example.com or https://example.com)');
-      return;
-    }
+  try {
+    new URL(norm);
+  } catch {
+    setError('Please enter a valid website URL (e.g., example.com or https://example.com)');
+    return;
+  }
 
-  setNormalizedUrl(normalizedUrl);
+  setNormalizedUrl(norm);
   setShowModal(true);
+};
 
-  };
 const handleModalSubmit = async () => {
   const errors = {};
 
