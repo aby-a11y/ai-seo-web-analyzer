@@ -117,7 +117,7 @@ class SEOAnalysisRequest(BaseModel):
 # ✅ NEW: User Details Model (ADD THIS)
 class UserDetails(BaseModel):
     name: str
-    email: EmailStr  # Email validation ke liye
+    email: Str  # Email validation ke liye
     phone: str
 
 # ✅ NEW: Combined Request Model (ADD THIS)
