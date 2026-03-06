@@ -7,6 +7,8 @@ import {
   TrendingUp, Target, Users, FileText, Calendar, Copy, Check,
   Sparkles, Link2, Image as ImageIcon, Share2, Shield
 } from 'lucide-react';
+import Report from '../components/Report';
+
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
