@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict, HttpUrl
+from pydantic import BaseModel, Field, ConfigDict, HttpUrl, EmailStr
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone
@@ -68,6 +68,9 @@ class SEOReport(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     url: str
     analyzed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    user_phone: Optional[str] = None
     
     # Website Overview
     title: Optional[str] = None
@@ -111,7 +114,16 @@ class SEOReport(BaseModel):
 
 class SEOAnalysisRequest(BaseModel):
     url: HttpUrl
+# ✅ NEW: User Details Model (ADD THIS)
+class UserDetails(BaseModel):
+    name: str
+    email: EmailStr  # Email validation ke liye
+    phone: str
 
+# ✅ NEW: Combined Request Model (ADD THIS)
+class SEOAnalysisRequestWithUser(BaseModel):
+    url: HttpUrl
+    user_details: UserDetails
 
 class SEOReportResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -119,6 +131,10 @@ class SEOReportResponse(BaseModel):
     id: str
     url: str
     analyzed_at: datetime
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    user_phone: Optional[str] = None
+    
     title: Optional[str] = None
     meta_description: Optional[str] = None
     h1_tags: List[str] = []
@@ -1501,19 +1517,25 @@ async def get_status_checks():
     
     return status_checks
 
-
 @api_router.post("/seo/analyze", response_model=SEOReportResponse)
-async def analyze_seo(request: SEOAnalysisRequest):
-    """Analyze a website and generate comprehensive SEO report"""
+async def analyze_seo(request: SEOAnalysisRequestWithUser):  # ✅ CHANGE 1: SEOAnalysisRequest → SEOAnalysisRequestWithUser
+    """Analyze a website and generate comprehensive SEO report with user details"""
     
     url = str(request.url)
-    logger.info(f"Starting SEO analysis for: {url}")
+    user_details = request.user_details  # ✅ CHANGE 2: Extract user details
+    
+    logger.info(f"Starting SEO analysis for: {url} | User: {user_details.name} ({user_details.email})")  # ✅ CHANGE 3: Updated log
     
     # Scrape website
     scraped_data = await scrape_website(url)
     
     # AI analysis
     report = await analyze_with_ai(url, scraped_data)
+    
+    # ✅ CHANGE 4: Add user details to report (ADD THESE 3 LINES)
+    report.user_name = user_details.name
+    report.user_email = user_details.email
+    report.user_phone = user_details.phone
     
     # Save to database
     doc = report.model_dump()
