@@ -135,6 +135,13 @@ const HistoryPage = () => {
                         minute: '2-digit'
                       })}
                     </p>
+                    {report.user_name && (
+                      <div className="flex gap-4 text-sm text-gray-600 mb-3">
+                        <span>👤 {report.user_name}</span>
+                         <span>✉️ {report.user_email}</span>
+                          <span>📞 {report.user_phone}</span>
+                          </div>
+                          )}
 
                     {report.analysis_summary && (
                       <p className="text-gray-700 mb-4 line-clamp-2">{report.analysis_summary}</p>
