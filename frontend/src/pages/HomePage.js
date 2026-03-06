@@ -52,7 +52,10 @@ const HomePage = () => {
     setError('');
     
     // ✨ UPDATED: Normalize URL before validation
-    const normalizedUrl = normalizeUrl(url);
+    const norm = normalizeUrl(url);
+    setNormalizedUrl(norm);
+
+
     
     // Validate URL
     try {
