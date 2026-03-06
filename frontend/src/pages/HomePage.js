@@ -9,9 +9,6 @@ const API = `${BACKEND_URL}/api`;
 const HomePage = () => {
   const navigate = useNavigate();
   const [url, setUrl] = useState('');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -46,6 +43,7 @@ const HomePage = () => {
   const handleAnalyze = async (e) => {
     e.preventDefault();
     setError('');
+    
     // ✨ UPDATED: Normalize URL before validation
     const normalizedUrl = normalizeUrl(url);
     
@@ -60,13 +58,8 @@ const HomePage = () => {
     setLoading(true);
     
     try {
-      // ✨ UPDATED: Use normalized URL with user details
-      const response = await axios.post(`${API}/seo/analyze`, { 
-        url: normalizedUrl,
-        name: name,
-        email: email,
-        phone: phone
-      });
+      // ✨ UPDATED: Use normalized URL
+      const response = await axios.post(`${API}/seo/analyze`, { url: normalizedUrl });
       const reportId = response.data.id;
       navigate(`/report/${reportId}`);
     } catch (err) {
@@ -110,119 +103,48 @@ const HomePage = () => {
 
           {/* URL Input Form */}
           <div className="max-w-3xl mx-auto" data-testid="url-input-form">
-            <form onSubmit={handleAnalyze} className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
-              
-              {/* URL Input */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Website URL <span className="text-red-500">*</span>
-                </label>
-                <div className="flex items-center bg-gray-50 rounded-xl border-2 border-gray-200 focus-within:border-indigo-500 transition-all">
-                  <Search className="w-5 h-5 text-gray-400 ml-4" />
-                  <input
-                    type="text"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="example.com or pixelglobal.com"
-                    className="flex-1 px-4 py-4 text-base outline-none bg-transparent rounded-xl"
-                    disabled={loading}
-                    data-testid="url-input"
-                    required
-                  />
-                </div>
+            <form onSubmit={handleAnalyze} className="relative">
+              <div className="flex items-center bg-white rounded-2xl shadow-xl border-2 border-transparent focus-within:border-indigo-500 transition-all">
+                <Search className="w-6 h-6 text-gray-400 ml-6" />
+                <input
+                  type="text"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="Enter website URL (e.g., example.com or pixelglobal.com)"
+                  className="flex-1 px-4 py-5 text-lg outline-none rounded-l-2xl"
+                  disabled={loading}
+                  data-testid="url-input"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !url}
+                  className="px-8 py-5 bg-indigo-600 text-white font-semibold rounded-r-2xl hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                  data-testid="analyze-button"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Analyzing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Analyze</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
               </div>
-
-              {/* Client Details Grid */}
-              <div className="grid md:grid-cols-3 gap-4 mb-6">
-                {/* Name Input */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Client Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="John Doe"
-                    className="w-full px-4 py-3 text-base border-2 border-gray-200 rounded-xl outline-none focus:border-indigo-500 transition-all"
-                    disabled={loading}
-                    required
-                    minLength={2}
-                    maxLength={100}
-                  />
-                </div>
-
-                {/* Email Input */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Email Address <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="john@example.com"
-                    className="w-full px-4 py-3 text-base border-2 border-gray-200 rounded-xl outline-none focus:border-indigo-500 transition-all"
-                    disabled={loading}
-                    required
-                  />
-                </div>
-
-                {/* Phone Input */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full px-4 py-3 text-base border-2 border-gray-200 rounded-xl outline-none focus:border-indigo-500 transition-all"
-                    disabled={loading}
-                    required
-                    minLength={10}
-                    maxLength={15}
-                  />
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading || !url || !name || !email || !phone}
-                className="w-full px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg rounded-xl hover:from-indigo-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
-                data-testid="analyze-button"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                    <span>Analyzing...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Analyze Website</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
             </form>
-
             {error && (
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700" data-testid="error-message">
                 {error}
               </div>
             )}
-            
-            {/* Helper Text */}
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-500">
-                💡 <strong>Tip:</strong> Just enter the domain name (e.g., pixelglobal.com)
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                Your client information will be saved with the report for easy reference
-              </p>
-            </div>
+            {/* ✨ NEW: Helper text */}
+            <p className="mt-3 text-sm text-gray-500">
+              💡 Just enter the domain name - we'll handle the rest! (e.g., pixelglobal.com)
+            </p>
           </div>
         </div>
 
