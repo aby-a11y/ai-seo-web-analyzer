@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Search, Sparkles, TrendingUp, Target, FileText, Zap, ArrowRight, History } from 'lucide-react';
+import { Search, Sparkles, TrendingUp, Target, FileText, Zap, ArrowRight, History, User, Mail, Phone, X } from 'lucide-react';
+
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -11,6 +12,12 @@ const HomePage = () => {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [normalizedUrl, setNormalizedUrl] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [userInfo, setUserInfo] = useState({ name: '', email: '', phone: '' });
+  const [modalErrors, setModalErrors] = useState({});
+
+
 
   // ✨ NEW: Normalize URL function
   const normalizeUrl = (inputUrl) => {
@@ -55,18 +62,46 @@ const HomePage = () => {
       return;
     }
 
-    setLoading(true);
-    
-    try {
-      // ✨ UPDATED: Use normalized URL
-      const response = await axios.post(`${API}/seo/analyze`, { url: normalizedUrl });
-      const reportId = response.data.id;
-      navigate(`/report/${reportId}`);
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to analyze website. Please try again.');
-      setLoading(false);
-    }
+  setNormalizedUrl(normalizedUrl);
+  setShowModal(true);
+
   };
+const handleModalSubmit = async () => {
+  const errors = {};
+
+  if (!userInfo.name.trim()) errors.name = 'Name is required';
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!userInfo.email.trim()) errors.email = 'Email is required';
+  else if (!emailRegex.test(userInfo.email)) errors.email = 'Valid email chahiye';
+
+  const phoneRegex = /^[6-9]\d{9}$/;
+  if (!userInfo.phone.trim()) errors.phone = 'Phone required';
+  else if (!phoneRegex.test(userInfo.phone)) errors.phone = '10-digit valid number do';
+
+  if (Object.keys(errors).length > 0) {
+    setModalErrors(errors);
+    return;
+  }
+
+  setShowModal(false);
+  setLoading(true);
+
+  try {
+    const response = await axios.post(`${API}/seo/analyze`, {
+      url: normalizedUrl,
+      user_details: {
+        name: userInfo.name.trim(),
+        email: userInfo.email.trim(),
+        phone: userInfo.phone.trim(),
+      },
+    });
+    navigate(`/report/${response.data.id}`);
+  } catch (err) {
+    setError(err.response?.data?.detail || 'Failed to analyze website.');
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen">
@@ -182,6 +217,74 @@ const HomePage = () => {
           />
         </div>
       </div>
+      {/* User Info Modal */}
+{showModal && (
+  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+    <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-2xl font-bold text-gray-900">Your Details</h3>
+          <p className="text-sm text-gray-500 mt-1">Analysis ke liye info fill karo</p>
+        </div>
+        <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+          <User className="w-5 h-5 text-indigo-600" />
+        </div>
+      </div>
+      <div className="bg-indigo-50 rounded-xl px-4 py-3 mb-6">
+        <p className="text-xs text-indigo-500 font-medium uppercase mb-1">Analyzing</p>
+        <p className="text-sm text-indigo-800 font-semibold truncate">{normalizedUrl}</p>
+      </div>
+      {/* Name */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+        <div className="relative">
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input type="text" value={userInfo.name}
+            onChange={(e) => { setUserInfo({...userInfo, name: e.target.value}); setModalErrors({...modalErrors, name: ''}); }}
+            placeholder="Apna naam likho"
+            className={`w-full pl-10 pr-4 py-3 border rounded-xl outline-none ${modalErrors.name ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`} />
+        </div>
+        {modalErrors.name && <p className="text-red-500 text-xs mt-1">⚠ {modalErrors.name}</p>}
+      </div>
+      {/* Email */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input type="email" value={userInfo.email}
+            onChange={(e) => { setUserInfo({...userInfo, email: e.target.value}); setModalErrors({...modalErrors, email: ''}); }}
+            placeholder="Email address"
+            className={`w-full pl-10 pr-4 py-3 border rounded-xl outline-none ${modalErrors.email ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`} />
+        </div>
+        {modalErrors.email && <p className="text-red-500 text-xs mt-1">⚠ {modalErrors.email}</p>}
+      </div>
+      {/* Phone */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+        <div className="relative">
+          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input type="tel" value={userInfo.phone} maxLength={10}
+            onChange={(e) => { setUserInfo({...userInfo, phone: e.target.value}); setModalErrors({...modalErrors, phone: ''}); }}
+            placeholder="10-digit number"
+            className={`w-full pl-10 pr-4 py-3 border rounded-xl outline-none ${modalErrors.phone ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`} />
+        </div>
+        {modalErrors.phone && <p className="text-red-500 text-xs mt-1">⚠ {modalErrors.phone}</p>}
+      </div>
+      {/* Buttons */}
+      <div className="flex gap-3">
+        <button onClick={() => { setShowModal(false); setModalErrors({}); }}
+          className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 font-medium flex items-center justify-center gap-2">
+          <X className="w-4 h-4" /> Cancel
+        </button>
+        <button onClick={handleModalSubmit}
+          className="flex-1 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-semibold flex items-center justify-center gap-2">
+          Start Analysis <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Loading Overlay */}
       {loading && (
