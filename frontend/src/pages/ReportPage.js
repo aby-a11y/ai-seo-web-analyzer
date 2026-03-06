@@ -146,6 +146,17 @@ const ReportPage = () => {
                   minute: '2-digit'
                 })}
               </p>
+              {report.user_name && (
+  <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4">
+    <p className="text-xs font-semibold text-indigo-500 uppercase mb-2">Analyzed For</p>
+    <div className="flex gap-6 text-sm text-gray-700 flex-wrap">
+      <span>👤 <b>{report.user_name}</b></span>
+      <span>✉️ {report.user_email}</span>
+      <span>📞 {report.user_phone}</span>
+    </div>
+  </div>
+)}
+
             </div>
           </div>
 
