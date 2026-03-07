@@ -1,10 +1,17 @@
-from playwright.sync_api import sync_playwright
 import base64
-from PIL import Image
 import io
 
 def capture_responsive_screenshots(url):
     """Mobile, tablet, desktop screenshots"""
+    
+    # Lazy import - server crash nahi hoga agar playwright nahi hai
+    try:
+        from playwright.sync_api import sync_playwright
+        from PIL import Image
+    except ImportError:
+        print("Playwright not installed - skipping screenshots")
+        return {}
+    
     screenshots = {}
     devices = {
         'mobile': {'width': 375, 'height': 667, 'name': 'iPhone SE'},
@@ -25,7 +32,6 @@ def capture_responsive_screenshots(url):
                     page.wait_for_timeout(2000)
                     screenshot_bytes = page.screenshot(full_page=False)
                     
-                    # Compress image
                     img = Image.open(io.BytesIO(screenshot_bytes))
                     output = io.BytesIO()
                     img.save(output, format='PNG', optimize=True, quality=85)
@@ -40,13 +46,13 @@ def capture_responsive_screenshots(url):
                     page.close()
                     
                 except Exception as e:
-                    print(f"Error capturing {device_type} screenshot: {str(e)}")
-                    continue  # Ek device fail ho to doosre capture karte raho
+                    print(f"Error capturing {device_type}: {str(e)}")
+                    continue
                     
             browser.close()
             
     except Exception as e:
         print(f"Playwright error: {str(e)}")
-        return {}  # Error pe empty dict return karo, crash nahi hoga
+        return {}
     
     return screenshots
