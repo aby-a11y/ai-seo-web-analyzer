@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException
+from screenshot_service import capture_responsive_screenshots
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -110,6 +111,9 @@ class SEOReport(BaseModel):
     readability_analysis: Optional[Dict[str, Any]] = {}
     keyword_density_analysis: Optional[Dict[str, Any]] = {}
     page_speed_analysis: Optional[Dict[str, Any]] = {}
+   
+    responsive_preview: Optional[Dict[str, Any]] = {}
+    
 
 
 class SEOAnalysisRequest(BaseModel):
@@ -167,6 +171,8 @@ class SEOReportResponse(BaseModel):
     readability_analysis: Optional[Dict[str, Any]] = {}
     keyword_density_analysis: Optional[Dict[str, Any]] = {}
     page_speed_analysis: Optional[Dict[str, Any]] = {}
+    
+    responsive_preview: Optional[Dict[str, Any]] = {}
 
 
 # Configure logging
@@ -1090,7 +1096,7 @@ async def scrape_website(url: str) -> Dict[str, Any]:
                 structured_data.append(json.loads(script.string))
             except:
                 pass
-        
+        responsive_screenshots = capture_responsive_screenshots(str(url))
         return {
             'title': title_text,
             'meta_description': meta_description,
@@ -1127,6 +1133,7 @@ async def scrape_website(url: str) -> Dict[str, Any]:
              'readability_analysis': readability_data,
              'keyword_density_analysis': keyword_analysis,
              'page_speed_analysis': page_speed_data,
+             'responsive_preview': responsive_screenshots,
         }
         
     except Exception as e:
@@ -1470,6 +1477,7 @@ Be professional, specific, and client-ready. Focus on high-impact optimizations,
             readability_analysis=scraped_data.get('readability_analysis', {}),
             keyword_density_analysis=scraped_data.get('keyword_density_analysis', {}),
             page_speed_analysis=scraped_data.get('page_speed_analysis', {}),
+            responsive_preview=scraped_data.get('responsive_preview', {}),  
             seo_score=ai_analysis.get('seo_score'),
             analysis_summary=ai_analysis.get('analysis_summary'),
             seo_issues=seo_issues_list,

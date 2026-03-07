@@ -7,6 +7,8 @@ import {
   TrendingUp, Target, Users, FileText, Calendar, Copy, Check,
   Sparkles, Link2, Image as ImageIcon, Share2, Shield
 } from 'lucide-react';
+import ResponsivePreview from '../components/ResponsivePreview';
+
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -1545,6 +1547,16 @@ const ReportPage = () => {
       )}
 
       {/* ========== END SECTION 5: ADVANCED ANALYTICS ========== */}
+
+      {/* ========== RESPONSIVE DEVICE PREVIEW ========== */}
+
+      {report.responsive_preview &&
+      Object.keys(report.responsive_preview).length > 0 && (
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+          <ResponsivePreview screenshots={report.responsive_preview} />
+          </div>
+          )}
+
 
 
       {/* 4.4 30-Day Action Plan */}
