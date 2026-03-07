@@ -4,8 +4,8 @@ nixPkgs = ["chromium", "nss", "cups", "libdrm", "libxkbcommon", "glib", "atk", "
 [phases.install]
 cmds = [
   "pip install -r backend/requirements.txt",
-  "pip install playwright pillow",
-  "python -m playwright install chromium --with-deps"
+  "pip install playwright==1.40.0 pillow textstat nltk",
+  "python -m playwright install chromium"
 ]
 
 [start]
