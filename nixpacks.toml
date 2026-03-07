@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["chromium", "nss", "cups", "libdrm", "libxkbcommon", "glib", "atk", "gtk3", "pango", "cairo"]
+
+[phases.install]
+cmds = [
+  "pip install -r backend/requirements.txt",
+  "python -m playwright install chromium"
+]
+
+[start]
+cmd = "cd backend && uvicorn server:app --host 0.0.0.0 --port $PORT"
