@@ -1096,7 +1096,7 @@ async def scrape_website(url: str) -> Dict[str, Any]:
                 structured_data.append(json.loads(script.string))
             except:
                 pass
-        responsive_screenshots = capture_responsive_screenshots(str(url))
+        responsive_screenshots = await capture_responsive_screenshots(str(url))
         return {
             'title': title_text,
             'meta_description': meta_description,
