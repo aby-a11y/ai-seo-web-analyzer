@@ -1,4 +1,4 @@
-# 🚀 AI SEO Web Analyzer
+# 🚀 AI SEO Web Analyzers
 
 > AI-powered comprehensive SEO audit tool with real-time analysis, actionable insights, and professional reporting.
 
@@ -139,6 +139,7 @@ linkdin id = https://www.linkedin.com/in/abhishek-dey-19aa47360/
 ```bash
 git clone https://github.com/aby-a11y/ai-seo-web-analyzer.git
 cd ai-seo-web-analyzer
+
 
 
 
