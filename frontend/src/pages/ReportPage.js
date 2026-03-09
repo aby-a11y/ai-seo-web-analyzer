@@ -65,9 +65,7 @@ const ReportPage = () => {
       default: return <Info className="w-5 h-5" />;
     }
   };
-
-  if (loading) {
-      const downloadPDF = async () => {
+const downloadPDF = async () => {
     const reportElement = document.getElementById('pdf-report-content');
     
     const canvas = await html2canvas(reportElement, {
@@ -99,6 +97,9 @@ const ReportPage = () => {
 
     pdf.save(`SEO-Report-${report.url?.replace(/https?:\/\//, '').replace(/\//g, '-')}.pdf`);
   };
+ 
+  if (loading) {
+     
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
