@@ -8,6 +8,9 @@ import {
   Sparkles, Link2, Image as ImageIcon, Share2, Shield
 } from 'lucide-react';
 import ResponsivePreview from '../components/ResponsivePreview';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -64,6 +67,38 @@ const ReportPage = () => {
   };
 
   if (loading) {
+      const downloadPDF = async () => {
+    const reportElement = document.getElementById('pdf-report-content');
+    
+    const canvas = await html2canvas(reportElement, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    let heightLeft = pdfHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - pdfHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save(`SEO-Report-${report.url?.replace(/https?:\/\//, '').replace(/\//g, '-')}.pdf`);
+  };
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -109,12 +144,23 @@ const ReportPage = () => {
             <div className="flex items-center space-x-2">
               <Sparkles className="w-6 h-6 text-indigo-600" />
               <span className="text-xl font-bold gradient-text">Pixel global Reports</span>
+              {/* PDF Button */}
+  <button
+    onClick={downloadPDF}
+    className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 
+               text-white rounded-lg hover:bg-indigo-700 transition-colors 
+               text-sm font-medium shadow-md"
+  >
+    <Share2 className="w-4 h-4" />
+    <span>Download PDF</span>
+  </button>
+
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div id = "pdf-report-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Website Overview */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8" data-testid="website-overview">
           <div className="flex items-start justify-between mb-6">
