@@ -757,6 +757,31 @@ const downloadPDF = async () => {
             </p>
           </div>
 
+ {/* LLM.txt */}
+<div className="bg-gray-50 p-5 rounded-lg border-l-4 border-teal-500 hover:shadow-md transition-shadow">
+  <p className="text-sm text-gray-600 mb-2 font-medium">LLM.txt</p>
+  <div className="flex items-center space-x-2 mb-2">
+    {report.technical_seo?.llm_txt_found ? (
+      <>
+        <CheckCircle className="w-5 h-5 text-green-600" />
+        <span className="font-bold text-green-700">Found</span>
+      </>
+    ) : (
+      <>
+        <AlertTriangle className="w-5 h-5 text-yellow-600" />
+        <span className="font-bold text-yellow-700">Not Found</span>
+      </>
+    )}
+  </div>
+  <p className="text-xs text-gray-600 mt-2">
+    {report.technical_seo?.llm_txt_found
+      ? '✅ AI-friendly content guide present'
+      : 'Add /llm.txt to help AI models understand your site'}
+  </p>
+</div>
+         
+          
+
           {/* Schema Markup - NEW */}
           {report.schema_analysis && (
             <div className="bg-gray-50 p-5 rounded-lg border-l-4 border-orange-500 hover:shadow-md transition-shadow">
