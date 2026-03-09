@@ -90,7 +90,6 @@ class SEOReport(BaseModel):
     canonical_issues: List[str] = []
     robots_txt_found: bool = False
     sitemap_found: bool = False
-    llm_txt_found: bool = False
     ssl_enabled: bool = False
     
     # Complete analysis data
@@ -154,7 +153,6 @@ class SEOReportResponse(BaseModel):
     canonical_url: Optional[str] = None
     canonical_issues: List[str] = []
     robots_txt_found: bool = False
-    llm_txt_found: bool = False
     sitemap_found: bool = False
     ssl_enabled: bool = False
     
@@ -255,17 +253,6 @@ def check_technical_seo(soup, final_url):
                 robots_content = robots_resp.text[:500]  # First 500 chars
     except:
         robots_exists = False
-        
-        # ========== LLM.TXT CHECK ==========
-        llm_txt_url = urljoin(root, "/llm.txt")
-        llm_txt_exists = False
-        try:
-            with httpx.Client(timeout=10) as client:
-                llm_resp = client.get(llm_txt_url)
-                llm_txt_exists = llm_resp.status_code == 200
-        except:
-                llm_txt_exists = False
-    
     
     # ========== ENHANCED SITEMAP DETECTION ==========
     sitemap_urls = [
@@ -320,8 +307,6 @@ def check_technical_seo(soup, final_url):
         "robots_txt_found": robots_exists,
         "robots_txt_url": robots_url,
         "robots_txt_preview": robots_content,
-        "llm_txt_found": llm_txt_exists,
-        "llm_txt_url": llm_txt_url,
         "sitemap_found": sitemap_exists,
         "sitemap_url": sitemap_url,
         "noindex": noindex,
@@ -1483,7 +1468,6 @@ Be professional, specific, and client-ready. Focus on high-impact optimizations,
             canonical_issues=technical_seo.get('canonical_issues', []),
             robots_txt_found=technical_seo.get('robots_txt_found', False),
             sitemap_found=technical_seo.get('sitemap_found', False),
-            llm_txt_found=technical_seo.get('llm_txt_found', False),
             ssl_enabled=technical_seo.get('ssl_enabled', False),
             
             technical_seo=technical_seo,
@@ -1503,7 +1487,7 @@ Be professional, specific, and client-ready. Focus on high-impact optimizations,
             content_recommendations=[ContentRecommendation(**rec) for rec in ai_analysis.get('content_recommendations', [])],
             action_plan_30_days=ai_analysis.get('action_plan_30_days', [])
         )
-
+        
         
         return report
       
