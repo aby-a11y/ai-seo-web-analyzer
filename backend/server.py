@@ -283,6 +283,17 @@ def check_technical_seo(soup, final_url):
     except:
         sitemap_exists = False
 
+    # ========== LLM.TXT DETECTION ==========
+    llm_txt_found = False
+    llm_txt_url = urljoin(root, "/llm.txt")
+    
+    try:
+        with httpx.Client(timeout=10) as client:
+            llm_resp = client.get(llm_txt_url)
+            if llm_resp.status_code == 200 and len(llm_resp.text.strip()) > 0:
+                llm_txt_found = True
+    except:
+        llm_txt_found = False
     
     # ========== META ROBOTS / NOINDEX ==========
     noindex_meta = soup.find("meta", attrs={"name": "robots"})
@@ -312,6 +323,8 @@ def check_technical_seo(soup, final_url):
         "noindex": noindex,
         "robots_directive": robots_directive,
         "ssl_enabled": ssl_enabled,
+        "llm_txt_found": llm_txt_found,
+        "llm_txt_url": llm_txt_url,
     }
 
 
@@ -1166,7 +1179,7 @@ async def analyze_with_ai(url: str, scraped_data: Dict[str, Any]) -> SEOReport:
     h6_count = len(scraped_data.get('h6_tags', []))
     
     images_without_alt = scraped_data.get('images_without_alt', 0)
-    total_images = scraped_data.get('image_count', 0)
+    total_images = scraped_data.get('total_images', 0)
     word_count = scraped_data.get('word_count', 0)
 
 
@@ -1239,6 +1252,7 @@ NEVER recalculate or use different character counts, word counts, or image count
 - Sitemap.xml: {'✓ Found' if technical_seo.get('sitemap_found') else '✗ Missing'}
 - Meta Robots: {technical_seo.get('robots_directive', 'Not set')}
 - Noindex Status: {'⚠️ YES (Page is noindexed!)' if technical_seo.get('noindex') else '✓ No'}
+- LLM.txt: {'✓ Found' if technical_seo.get('llm_txt_found') else '✗ Missing'} 
 
 🔒 Security:
 - SSL/HTTPS: {'✓ Enabled' if technical_seo.get('ssl_enabled') else '❌ DISABLED (Critical!)'}
