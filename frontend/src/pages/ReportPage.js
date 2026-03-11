@@ -310,26 +310,26 @@ const ReportPage = () => {
 
                           {/* PRIORITY IMPACT - ENHANCED */}
                           <div className={`flex items-start space-x-3 p-4 rounded-lg border-l-4 ${issue.priority === 'High'
-                              ? 'bg-red-50 border-red-500'
-                              : issue.priority === 'Medium'
-                                ? 'bg-yellow-50 border-yellow-500'
-                                : 'bg-blue-50 border-blue-500'
+                            ? 'bg-red-50 border-red-500'
+                            : issue.priority === 'Medium'
+                              ? 'bg-yellow-50 border-yellow-500'
+                              : 'bg-blue-50 border-blue-500'
                             }`}>
                             <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${issue.priority === 'High'
-                                ? 'bg-red-100'
-                                : issue.priority === 'Medium'
-                                  ? 'bg-yellow-100'
-                                  : 'bg-blue-100'
+                              ? 'bg-red-100'
+                              : issue.priority === 'Medium'
+                                ? 'bg-yellow-100'
+                                : 'bg-blue-100'
                               }`}>
                               {issue.priority === 'High' ? '🔥' : issue.priority === 'Medium' ? '⚠️' : '✓'}
                             </div>
                             <div className="flex-1">
                               <p className="text-sm font-bold text-gray-900 mb-1">Priority Impact</p>
                               <p className={`text-xs leading-relaxed ${issue.priority === 'High'
-                                  ? 'text-red-800'
-                                  : issue.priority === 'Medium'
-                                    ? 'text-yellow-800'
-                                    : 'text-blue-800'
+                                ? 'text-red-800'
+                                : issue.priority === 'Medium'
+                                  ? 'text-yellow-800'
+                                  : 'text-blue-800'
                                 }`}>
                                 {issue.priority === 'High'
                                   ? 'Critical - Fix immediately for maximum SEO benefit and ranking improvement'
@@ -953,36 +953,164 @@ const ReportPage = () => {
                       <p className="text-xs text-red-600 mt-1">Add descriptive anchor text</p>
 
 
-                          {/* ✅ NAYI LINES — */}
-                          {Array.isArray(report.linking_analysis.empty_anchor_links) &&
-                            report.linking_analysis.empty_anchor_links.length > 0 && (
-                              <div className="mt-3 border-t border-red-200 pt-3">
-                                <p className="text-xs font-semibold text-red-800 mb-2">
-                                  🔗 Problematic Links:
-                                </p>
-                                <ul className="space-y-1 max-h-40 overflow-y-auto">
-                                  {report.linking_analysis.empty_anchor_links.map((link, idx) => (
-                                    <li key={idx} className="text-xs text-red-700 bg-white p-2 rounded border border-red-100 break-all">
-                                      <span className="font-medium">#{idx + 1}</span>{" "}
-                                      <a
-                                        href={link.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="underline hover:text-red-900"
-                                      >
-                                        {link.url}
-                                      </a>
-                                      {link.opens_new_tab && (
-                                        <span className="ml-1 text-gray-500">(new tab)</span>
-                                      )}
-                                    </li>
+                      {/* ✅ NAYI LINES — */}
+                      {Array.isArray(report.linking_analysis.empty_anchor_links) &&
+                        report.linking_analysis.empty_anchor_links.length > 0 && (
+                          <div className="mt-3 border-t border-red-200 pt-3">
+                            <p className="text-xs font-semibold text-red-800 mb-2">
+                              🔗 Problematic Links:
+                            </p>
+                            <ul className="space-y-1 max-h-40 overflow-y-auto">
+                              {report.linking_analysis.empty_anchor_links.map((link, idx) => (
+                                <li key={idx} className="text-xs text-red-700 bg-white p-2 rounded border border-red-100 break-all">
+                                  <span className="font-medium">#{idx + 1}</span>{" "}
+                                  <a
+                                    href={link.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="underline hover:text-red-900"
+                                  >
+                                    {link.url}
+                                  </a>
+                                  {link.opens_new_tab && (
+                                    <span className="ml-1 text-gray-500">(new tab)</span>
+                                  )}
+                                </li>
 
-                                  ))}
+                              ))}
 
-                                </ul>
+                            </ul>
+                          </div>
+                        )}
+                      {/* ✅ New LINES KHATAM */}
+                      {/* ✅ TOP 20 INTERNAL LINKS TABLE */}
+                      {Array.isArray(report.linking_analysis.internal_links) &&
+                        report.linking_analysis.internal_links.length > 0 && (
+                          <div className="mt-6">
+                            <button
+                              onClick={() => setExpandedSection(expandedSection === 'internal-links' ? null : 'internal-links')}
+                              className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-lg border border-green-200 transition-all"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <span className="text-sm font-bold text-green-900">🔗 Top Internal Links</span>
+                                <span className="px-3 py-1 bg-green-600 text-white rounded-full text-xs font-bold">
+                                  {report.linking_analysis.internal_links.length}
+                                </span>
                               </div>
-                      )}
-                      {/* ✅ NAYI LINES KHATAM */}
+                              <div className={`text-2xl font-bold text-green-600 transition-transform ${expandedSection === 'internal-links' ? 'rotate-45' : ''}`}>+</div>
+                            </button>
+
+                            {expandedSection === 'internal-links' && (
+                              <div className="mt-3 overflow-x-auto">
+                                <table className="w-full border-collapse text-sm">
+                                  <thead>
+                                    <tr className="bg-gray-100">
+                                      <th className="text-left p-3 font-semibold text-gray-700">#</th>
+                                      <th className="text-left p-3 font-semibold text-gray-700">URL</th>
+                                      <th className="text-left p-3 font-semibold text-gray-700">Anchor Text</th>
+                                      <th className="text-left p-3 font-semibold text-gray-700">Nofollow</th>
+                                      <th className="text-left p-3 font-semibold text-gray-700">New Tab</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {report.linking_analysis.internal_links.map((link, idx) => (
+                                      <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
+                                        <td className="p-3 text-gray-500 font-medium">#{idx + 1}</td>
+                                        <td className="p-3 max-w-xs">
+                                          <a href={link.url} target="_blank" rel="noopener noreferrer"
+                                            className="text-indigo-600 hover:text-indigo-800 underline break-all text-xs">
+                                            {link.url}
+                                          </a>
+                                        </td>
+                                        <td className="p-3 text-gray-800">
+                                          {link.anchor_text
+                                            ? link.anchor_text
+                                            : <span className="text-red-500 italic">Empty</span>}
+                                        </td>
+                                        <td className="p-3">
+                                          {link.has_nofollow
+                                            ? <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Yes</span>
+                                            : <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">No</span>}
+                                        </td>
+                                        <td className="p-3">
+                                          {link.opens_new_tab
+                                            ? <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Yes</span>
+                                            : <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">No</span>}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                      {/* ✅ TOP 10 EXTERNAL LINKS TABLE */}
+                      {Array.isArray(report.linking_analysis.external_links) &&
+                        report.linking_analysis.external_links.length > 0 && (
+                          <div className="mt-4 mb-2">
+                            <button
+                              onClick={() => setExpandedSection(expandedSection === 'external-links' ? null : 'external-links')}
+                              className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 transition-all"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <span className="text-sm font-bold text-blue-900">🌐 Top External Links</span>
+                                <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-bold">
+                                  {report.linking_analysis.external_links.length}
+                                </span>
+                              </div>
+                              <div className={`text-2xl font-bold text-blue-600 transition-transform ${expandedSection === 'external-links' ? 'rotate-45' : ''}`}>+</div>
+                            </button>
+
+                            {expandedSection === 'external-links' && (
+                              <div className="mt-3 overflow-x-auto">
+                                <table className="w-full border-collapse text-sm">
+                                  <thead>
+                                    <tr className="bg-gray-100">
+                                      <th className="text-left p-3 font-semibold text-gray-700">#</th>
+                                      <th className="text-left p-3 font-semibold text-gray-700">URL</th>
+                                      <th className="text-left p-3 font-semibold text-gray-700">Anchor Text</th>
+                                      <th className="text-left p-3 font-semibold text-gray-700">Dofollow</th>
+                                      <th className="text-left p-3 font-semibold text-gray-700">New Tab</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {report.linking_analysis.external_links.map((link, idx) => (
+                                      <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
+                                        <td className="p-3 text-gray-500 font-medium">#{idx + 1}</td>
+                                        <td className="p-3 max-w-xs">
+                                          <a href={link.url} target="_blank" rel="noopener noreferrer"
+                                            className="text-blue-600 hover:text-blue-800 underline break-all text-xs">
+                                            {link.url}
+                                          </a>
+                                        </td>
+                                        <td className="p-3 text-gray-800">
+                                          {link.anchor_text
+                                            ? link.anchor_text
+                                            : <span className="text-red-500 italic">Empty</span>}
+                                        </td>
+                                        <td className="p-3">
+                                          {link.is_dofollow
+                                            ? <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">✓ Dofollow</span>
+                                            : <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Nofollow</span>}
+                                        </td>
+                                        <td className="p-3">
+                                          {link.opens_new_tab
+                                            ? <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Yes</span>
+                                            : <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">No</span>}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+
+
                     </div>
                   )}
                 </div>
@@ -1311,11 +1439,11 @@ const ReportPage = () => {
 
             {/* Readability Score Interpretation */}
             <div className={`p-4 rounded-lg border-l-4 ${(report.readability_analysis.flesch_reading_ease || 0) >= 60 &&
-                (report.readability_analysis.flesch_reading_ease || 0) <= 70
-                ? 'bg-green-50 border-green-500'
-                : (report.readability_analysis.flesch_reading_ease || 0) >= 50
-                  ? 'bg-yellow-50 border-yellow-500'
-                  : 'bg-red-50 border-red-500'
+              (report.readability_analysis.flesch_reading_ease || 0) <= 70
+              ? 'bg-green-50 border-green-500'
+              : (report.readability_analysis.flesch_reading_ease || 0) >= 50
+                ? 'bg-yellow-50 border-yellow-500'
+                : 'bg-red-50 border-red-500'
               }`}>
               <p className="text-sm font-semibold text-gray-800 mb-2">
                 {(report.readability_analysis.flesch_reading_ease || 0) >= 60 &&
@@ -1416,8 +1544,8 @@ const ReportPage = () => {
                             </td>
                             <td className="p-3 text-sm">
                               <span className={`px-2 py-1 rounded-full text-xs font-semibold ${kw.status === '✅ Good' ? 'bg-green-100 text-green-800' :
-                                  kw.status === '⚠️ Overused' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
+                                kw.status === '⚠️ Overused' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
                                 }`}>
                                 {kw.status}
                               </span>
@@ -1476,10 +1604,10 @@ const ReportPage = () => {
 
             {/* Performance Score - Highlighted */}
             <div className={`p-6 rounded-xl mb-6 border-2 ${(report.page_speed_analysis.performance_score || 0) >= 80
-                ? 'bg-green-50 border-green-500'
-                : (report.page_speed_analysis.performance_score || 0) >= 60
-                  ? 'bg-yellow-50 border-yellow-500'
-                  : 'bg-red-50 border-red-500'
+              ? 'bg-green-50 border-green-500'
+              : (report.page_speed_analysis.performance_score || 0) >= 60
+                ? 'bg-yellow-50 border-yellow-500'
+                : 'bg-red-50 border-red-500'
               }`}>
               <div className="flex items-center justify-between">
                 <div>
@@ -1564,8 +1692,8 @@ const ReportPage = () => {
             {/* Optimization Status */}
             <div className="grid md:grid-cols-2 gap-4 mb-6">
               <div className={`p-4 rounded-lg border-l-4 ${report.page_speed_analysis.compression_enabled
-                  ? 'bg-green-50 border-green-500'
-                  : 'bg-red-50 border-red-500'
+                ? 'bg-green-50 border-green-500'
+                : 'bg-red-50 border-red-500'
                 }`}>
                 <p className="text-sm text-gray-700 mb-1 font-medium">Text Compression</p>
                 <div className="flex items-center space-x-2">
@@ -1587,8 +1715,8 @@ const ReportPage = () => {
               </div>
 
               <div className={`p-4 rounded-lg border-l-4 ${report.page_speed_analysis.caching_enabled
-                  ? 'bg-green-50 border-green-500'
-                  : 'bg-red-50 border-red-500'
+                ? 'bg-green-50 border-green-500'
+                : 'bg-red-50 border-red-500'
                 }`}>
                 <p className="text-sm text-gray-700 mb-1 font-medium">Browser Caching</p>
                 <div className="flex items-center space-x-2">
