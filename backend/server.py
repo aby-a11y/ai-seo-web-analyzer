@@ -906,6 +906,9 @@ def analyze_internal_links(soup, base_url):
     
     # Check for anchor text quality
     empty_anchors = sum(1 for link in internal_links if not link['anchor_text'])
+    empty_anchor_links = [
+        link for link in internal_links if not link['anchor_text']
+        ]
     if empty_anchors > 0:
         recommendations.append(f"❌ {empty_anchors} links have empty anchor text - Add descriptive anchor text")
     
@@ -918,6 +921,7 @@ def analyze_internal_links(soup, base_url):
         "external_links": external_links[:10],  # First 10
         "nofollow_internal_count": nofollow_count,
         "empty_anchor_count": empty_anchors,
+        "empty_anchor_links": empty_anchor_links,
         "recommendations": recommendations
     }
     # ========== NEW: BACKLINK ANALYZER ==========
