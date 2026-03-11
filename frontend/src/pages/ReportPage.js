@@ -952,11 +952,6 @@ const ReportPage = () => {
                       <p className="text-2xl font-bold text-red-700">{report.linking_analysis.empty_anchor_count}</p>
                       <p className="text-xs text-red-600 mt-1">Add descriptive anchor text</p>
 
-                      {report.linking_analysis.empty_anchor_count > 0 && (
-                        <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                          <p className="text-sm text-gray-700 mb-1">Empty Anchor Text</p>
-                          <p className="text-2xl font-bold text-red-700">{report.linking_analysis.empty_anchor_count}</p>
-                          <p className="text-xs text-red-600 mt-1">Add descriptive anchor text</p>
 
                           {/* ✅ NAYI LINES — */}
                           {Array.isArray(report.linking_analysis.empty_anchor_links) &&
@@ -986,11 +981,6 @@ const ReportPage = () => {
 
                                 </ul>
                               </div>
-                            )}
-                        </div>
-
-
-
                       )}
                       {/* ✅ NAYI LINES KHATAM */}
                     </div>
