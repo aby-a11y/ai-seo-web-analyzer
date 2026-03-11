@@ -1046,68 +1046,6 @@ const ReportPage = () => {
                           </div>
                         )}
 
-                      {/* ✅ TOP 10 EXTERNAL LINKS TABLE */}
-                      {Array.isArray(report.linking_analysis.external_links) &&
-                        report.linking_analysis.external_links.length > 0 && (
-                          <div className="mt-4 mb-2">
-                            <button
-                              onClick={() => setExpandedSection(expandedSection === 'external-links' ? null : 'external-links')}
-                              className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 transition-all"
-                            >
-                              <div className="flex items-center space-x-3">
-                                <span className="text-sm font-bold text-blue-900">🌐 Top External Links</span>
-                                <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-bold">
-                                  {report.linking_analysis.external_links.length}
-                                </span>
-                              </div>
-                              <div className={`text-2xl font-bold text-blue-600 transition-transform ${expandedSection === 'external-links' ? 'rotate-45' : ''}`}>+</div>
-                            </button>
-
-                            {expandedSection === 'external-links' && (
-                              <div className="mt-3 overflow-x-auto">
-                                <table className="w-full border-collapse text-sm">
-                                  <thead>
-                                    <tr className="bg-gray-100">
-                                      <th className="text-left p-3 font-semibold text-gray-700">#</th>
-                                      <th className="text-left p-3 font-semibold text-gray-700">URL</th>
-                                      <th className="text-left p-3 font-semibold text-gray-700">Anchor Text</th>
-                                      <th className="text-left p-3 font-semibold text-gray-700">Dofollow</th>
-                                      <th className="text-left p-3 font-semibold text-gray-700">New Tab</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {report.linking_analysis.external_links.map((link, idx) => (
-                                      <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
-                                        <td className="p-3 text-gray-500 font-medium">#{idx + 1}</td>
-                                        <td className="p-3 max-w-xs">
-                                          <a href={link.url} target="_blank" rel="noopener noreferrer"
-                                            className="text-blue-600 hover:text-blue-800 underline break-all text-xs">
-                                            {link.url}
-                                          </a>
-                                        </td>
-                                        <td className="p-3 text-gray-800">
-                                          {link.anchor_text
-                                            ? link.anchor_text
-                                            : <span className="text-red-500 italic">Empty</span>}
-                                        </td>
-                                        <td className="p-3">
-                                          {link.is_dofollow
-                                            ? <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">✓ Dofollow</span>
-                                            : <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Nofollow</span>}
-                                        </td>
-                                        <td className="p-3">
-                                          {link.opens_new_tab
-                                            ? <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Yes</span>
-                                            : <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">No</span>}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
-                          </div>
-                        )}
 
 
 
@@ -1223,6 +1161,69 @@ const ReportPage = () => {
                   </p>
                   <p className="text-xs text-gray-600 mt-1">Target: 60-80%</p>
                 </div>
+                {/* ✅ TOP 10 EXTERNAL LINKS TABLE */}
+                {Array.isArray(report.linking_analysis.external_links) &&
+                  report.linking_analysis.external_links.length > 0 && (
+                    <div className="mt-4 mb-2">
+                      <button
+                        onClick={() => setExpandedSection(expandedSection === 'external-links' ? null : 'external-links')}
+                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-lg border border-blue-200 transition-all"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="text-sm font-bold text-blue-900">🌐 Top External Links</span>
+                          <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-bold">
+                            {report.linking_analysis.external_links.length}
+                          </span>
+                        </div>
+                        <div className={`text-2xl font-bold text-blue-600 transition-transform ${expandedSection === 'external-links' ? 'rotate-45' : ''}`}>+</div>
+                      </button>
+
+                      {expandedSection === 'external-links' && (
+                        <div className="mt-3 overflow-x-auto">
+                          <table className="w-full border-collapse text-sm">
+                            <thead>
+                              <tr className="bg-gray-100">
+                                <th className="text-left p-3 font-semibold text-gray-700">#</th>
+                                <th className="text-left p-3 font-semibold text-gray-700">URL</th>
+                                <th className="text-left p-3 font-semibold text-gray-700">Anchor Text</th>
+                                <th className="text-left p-3 font-semibold text-gray-700">Dofollow</th>
+                                <th className="text-left p-3 font-semibold text-gray-700">New Tab</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {report.linking_analysis.external_links.map((link, idx) => (
+                                <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
+                                  <td className="p-3 text-gray-500 font-medium">#{idx + 1}</td>
+                                  <td className="p-3 max-w-xs">
+                                    <a href={link.url} target="_blank" rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800 underline break-all text-xs">
+                                      {link.url}
+                                    </a>
+                                  </td>
+                                  <td className="p-3 text-gray-800">
+                                    {link.anchor_text
+                                      ? link.anchor_text
+                                      : <span className="text-red-500 italic">Empty</span>}
+                                  </td>
+                                  <td className="p-3">
+                                    {link.is_dofollow
+                                      ? <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">✓ Dofollow</span>
+                                      : <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">Nofollow</span>}
+                                  </td>
+                                  <td className="p-3">
+                                    {link.opens_new_tab
+                                      ? <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">Yes</span>
+                                      : <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">No</span>}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
               </div>
             </div>
           )}
